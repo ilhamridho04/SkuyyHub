@@ -12394,40 +12394,197 @@ Box=true,
 
 
 local au=false
-local av=ar:Toggle{
+local av=false
+local aw
+
+
+
+local ax=(ah or clonereference or function(ax)return ax end)
+local ay=ax(game:GetService"Players")
+local az=ay.LocalPlayer
+ax(game:GetService"UserInputService")
+ax(game:GetService"ReplicatedStorage")
+local aA=ax(game:GetService"RunService")
+
+
+local aB=5
+local b=200
+local d=false
+
+
+local function startAutoFishing()
+if aw then
+aw:Disconnect()
+end
+
+aw=aA.Heartbeat:Connect(function()
+if not au then return end
+
+pcall(function()
+
+local f=az:FindFirstChild"PlayerGui"
+if not f then return end
+
+local g=f:FindFirstChild"FishingGui"or f:FindFirstChild"Fishing"
+if not g then return end
+
+
+local h=g:FindFirstChildOfClass("TextButton",true)or
+g:FindFirstChild("Cast",true)or
+g:FindFirstChild("CastButton",true)
+
+if h and h.Visible and not d then
+
+d=true
+h.Activated:Fire()
+
+
+task.wait(b/1000)
+
+
+local j=g:FindFirstChild("Reel",true)or
+g:FindFirstChild("Hook",true)or
+g:FindFirstChild("ReelButton",true)
+
+if j and j.Visible then
+j.Activated:Fire()
+end
+
+
+task.wait(aB)
+d=false
+end
+end)
+end)
+end
+
+local function stopAutoFishing()
+if aw then
+aw:Disconnect()
+aw=nil
+end
+d=false
+end
+
+local f=ar:Toggle{
 Title="Auto Fishing",
 Desc="Automatically catch fish when they bite",
 Flag="autoFishing",
 Value=false,
-Callback=function(av)
-au=av
+Callback=function(f)
+au=f
 aa:Notify{
 Title="🎣 Auto Fishing",
-Content=av and"Auto Fishing Enabled!"or"Auto Fishing Disabled",
-Icon=av and"fish"or"x",
+Content=f and"Auto Fishing Started!"or"Auto Fishing Stopped",
+Icon=f and"fish"or"x",
 Duration=2
 }
 
-if av then
-
-print"Starting auto fishing..."
+if f then
+startAutoFishing()
 else
-
-print"Stopping auto fishing..."
+stopAutoFishing()
 end
 end
 }
 
+
+ar:Toggle{
+Title="Perfect Fishing",
+Desc="Always get perfect catches (legit timing)",
+Flag="perfectFishing",
+Value=false,
+Callback=function(g)
+av=g
+aa:Notify{
+Title="⭐ Perfect Fishing",
+Content=g and"Perfect catches enabled!"or"Normal fishing restored",
+Icon=g and"star"or"fish",
+Duration=2
+}
+
+if g then
+startPerfectFishing()
+else
+stopPerfectFishing()
+end
+end
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ar:Slider{
 Title="Fishing Speed",
-Desc="Adjust how fast to cast and reel",
+Desc="Delay between casts (seconds)",
 Flag="fishingSpeed",
 Value={Min=1,Max=10,Default=5},
-Callback=function(aw)
-print("Fishing speed set to:",aw)
+Callback=function(g)
+aB=g
 aa:Notify{
 Title="🎣 Speed Adjusted",
-Content="Fishing speed: "..aw.."/10",
+Content="Fishing speed: "..g.."s delay",
 Duration=1
 }
 end
@@ -12438,8 +12595,62 @@ Title="Reaction Time (ms)",
 Desc="Delay before hooking fish (lower = faster)",
 Flag="reactionTime",
 Value={Min=50,Max=1000,Default=200},
-Callback=function(aw)
-print("Reaction time set to:",aw.."ms")
+Callback=function(g)
+b=g
+aa:Notify{
+Title="⚡ Reaction Time",
+Content="Reaction time: "..g.."ms",
+Duration=1
+}
+end
+}
+
+
+local function detectFishItGame()
+pcall(function()
+local g=az:FindFirstChild"PlayerGui"
+if not g then return false end
+
+
+local h={
+"FishingGui","Fishing","MiniGame","CastButton",
+"FishingMain","GameGui","FishIt"
+}
+
+for j,l in pairs(h)do
+if g:FindFirstChild(l)then
+return true
+end
+end
+
+
+local j=game:GetService"Workspace"
+local l={
+"FishingSpots","Lake","Pond","FishingArea"
+}
+
+for m,p in pairs(l)do
+if j:FindFirstChild(p)then
+return true
+end
+end
+
+return false
+end)
+end
+
+ar:Button{
+Title="Check Fish-It Game",
+Icon="search",
+Desc="Detect if Fish-It game is loaded",
+Callback=function()
+local g=detectFishItGame()
+aa:Notify{
+Title=g and"✅ Fish-It Detected"or"❌ Fish-It Not Found",
+Content=g and"Game detected! Auto fishing ready."or"Please join Fish-It game first.",
+Icon=g and"check-circle"or"alert-triangle",
+Duration=3
+}
 end
 }
 
@@ -12448,8 +12659,18 @@ Title="Start Auto Fishing",
 Icon="play",
 Desc="Begin automated fishing process",
 Callback=function()
+if not detectFishItGame()then
+aa:Notify{
+Title="❌ Game Not Detected",
+Content="Please join Fish-It game first!",
+Icon="alert-triangle",
+Duration=3
+}
+return
+end
+
 if not au then
-av:Set(true)
+f:Set(true)
 end
 aa:Notify{
 Title="🎣 Auto Fishing",
@@ -12461,18 +12682,18 @@ end
 }
 
 
-local aw=false
+local g=false
 as:Toggle{
 Title="Auto Sell Fish",
 Desc="Automatically sell caught fish",
 Flag="autoSell",
 Value=false,
-Callback=function(ax)
-aw=ax
+Callback=function(h)
+g=h
 aa:Notify{
 Title="💰 Auto Sell",
-Content=ax and"Auto Sell Enabled!"or"Auto Sell Disabled",
-Icon=ax and"dollar-sign"or"x",
+Content=h and"Auto Sell Enabled!"or"Auto Sell Disabled",
+Icon=h and"dollar-sign"or"x",
 Duration=2
 }
 end
@@ -12483,13 +12704,13 @@ Title="Minimum Sell Price",
 Desc="Only sell fish worth more than this amount",
 Flag="minSellPrice",
 Value={Min=0,Max=10000,Default=100},
-Callback=function(ax)
-print("Minimum sell price:",ax)
+Callback=function(h)
+print("Minimum sell price:",h)
 end
 }
 
 
-local ax={
+local h={
 {Title="All Fish",Icon="fish"},
 {Title="Common Fish",Icon="fish"},
 {Title="Rare Fish",Icon="star"},
@@ -12500,12 +12721,12 @@ local ax={
 as:Dropdown{
 Title="Fish Types to Sell",
 Flag="fishTypesToSell",
-Values=ax,
+Values=h,
 Value="All Fish",
-Callback=function(ay)
+Callback=function(j)
 aa:Notify{
 Title="🐟 Fish Filter",
-Content="Will sell: "..ay.Title,
+Content="Will sell: "..j.Title,
 Duration=2
 }
 end
@@ -12532,10 +12753,10 @@ Title="Auto Equip Best Rod",
 Desc="Automatically equip the best fishing rod",
 Flag="autoEquipBestRod",
 Value=false,
-Callback=function(ay)
+Callback=function(j)
 aa:Notify{
 Title="🎣 Auto Equip",
-Content=ay and"Will auto-equip best rod!"or"Auto-equip disabled",
+Content=j and"Will auto-equip best rod!"or"Auto-equip disabled",
 Duration=2
 }
 end
@@ -12546,10 +12767,10 @@ Title="Infinite Stamina",
 Desc="Never run out of stamina while fishing",
 Flag="infiniteStamina",
 Value=false,
-Callback=function(ay)
+Callback=function(j)
 aa:Notify{
 Title="⚡ Infinite Stamina",
-Content=ay and"Infinite stamina enabled!"or"Normal stamina restored",
+Content=j and"Infinite stamina enabled!"or"Normal stamina restored",
 Duration=2
 }
 end
@@ -12578,34 +12799,34 @@ ImageSize=20,
 Color="White"
 }
 
-local ay={}
-for az,aA in pairs(aa:GetThemes())do
-table.insert(ay,az)
+local j={}
+for l,m in pairs(aa:GetThemes())do
+table.insert(j,l)
 end
-table.sort(ay)
+table.sort(j)
 
-local az=true
-local aA=true
+local l=true
+local m=true
 
 
 
-local aB=aq.Appearance:Dropdown{
+local p=aq.Appearance:Dropdown{
 Title="loc:THEME_SELECT",
-Values=ay,
+Values=j,
 Flag="themeDropdown",
 SearchBarEnabled=true,
 MenuWidth=280,
 Value="Dark",
-Callback=function(aB)
-aA=false
-aa:SetTheme(aB)
+Callback=function(p)
+m=false
+aa:SetTheme(p)
 aa:Notify{
 Title="Theme Applied",
-Content=aB,
+Content=p,
 Icon="palette",
 Duration=2
 }
-aA=true
+m=true
 end
 }
 
@@ -12618,30 +12839,30 @@ Default=0,
 },
 Flag="transparencySlider",
 Step=0.1,
-Callback=function(b)
-af:SetBackgroundTransparency(b)
-af:SetBackgroundImageTransparency(b)
+Callback=function(r)
+af:SetBackgroundTransparency(r)
+af:SetBackgroundImageTransparency(r)
 end
 }
 
-local b=aq.Appearance:Toggle{
+local r=aq.Appearance:Toggle{
 Title="Enable Dark Mode",
 Desc="Use dark color scheme",
 Value=true,
-Callback=function(b)
-if az then
-aa:SetTheme(b and"Dark"or"Light")
+Callback=function(r)
+if l then
+aa:SetTheme(r and"Dark"or"Light")
 end
-if aA then
-aB:Select(b and"Dark"or"Light")
+if m then
+p:Select(r and"Dark"or"Light")
 end
 end
 }
 
-aa:OnThemeChange(function(d)
-az=false
-b:Set(d=="Dark")
-az=true
+aa:OnThemeChange(function(u)
+l=false
+r:Set(u=="Dark")
+l=true
 end)
 
 
@@ -12670,37 +12891,37 @@ ImageSize=20,
 Color="White"
 }
 
-local d="default"
-local f
-local g={
+local u="default"
+local v
+local x={
 name="Player1",
 level=1,
 inventory={"sword","shield","potion"}
 }
 
-local h=aq.Config:Input{
+local z=aq.Config:Input{
 Title="Config Name",
-Value=d,
-Callback=function(h)
-d=h or"default"
+Value=u,
+Callback=function(z)
+u=z or"default"
 end
 }
 
-local j=af.ConfigManager
+local A=af.ConfigManager
 
 aq.Config:Dropdown{
 Title="Select Config",
-Values=j:AllConfigs(),
-Value=d,
+Values=A:AllConfigs(),
+Value=u,
 AllowNone=false,
-Callback=function(l)
-d=l or"default"
-h:Set(d)
+Callback=function(B)
+u=B or"default"
+z:Set(u)
 end
 }
 
-if j then
-j:Init(af)
+if A then
+A:Init(af)
 
 aq.Config:Space{Columns=0}
 
@@ -12711,7 +12932,7 @@ IconAlign="Left",
 Justify="Center",
 Color=Color3.fromHex"315dff",
 Callback=function()
-f=j:CreateConfig(d)
+v=A:CreateConfig(u)
 
 
 
@@ -12719,13 +12940,13 @@ f=j:CreateConfig(d)
 
 
 
-f:Set("playerData",g)
-f:Set("lastSave",os.date"%Y-%m-%d %H:%M:%S")
+v:Set("playerData",x)
+v:Set("lastSave",os.date"%Y-%m-%d %H:%M:%S")
 
-if f:Save()then
+if v:Save()then
 aa:Notify{
 Title="loc:SAVE_CONFIG",
-Content="Saved as: "..d,
+Content="Saved as: "..u,
 Icon="check",
 Duration=3
 }
@@ -12750,18 +12971,18 @@ Justify="Center",
 Color=Color3.fromHex"315dff",
 Icon="folder",
 Callback=function()
-f=j:CreateConfig(d)
-local l=f:Load()
+v=A:CreateConfig(u)
+local B=v:Load()
 
-if l then
-if l.playerData then
-g=l.playerData
+if B then
+if B.playerData then
+x=B.playerData
 end
 
-local m=l.lastSave or"Unknown"
+local C=B.lastSave or"Unknown"
 aa:Notify{
 Title="loc:LOAD_CONFIG",
-Content="Loaded: "..d.."\nLast save: "..m,
+Content="Loaded: "..u.."\nLast save: "..C,
 Icon="refresh-cw",
 Duration=5
 }
@@ -12769,9 +12990,9 @@ Duration=5
 aq.Config:Paragraph{
 Title="Player Data",
 Desc=string.format("Name: %s\nLevel: %d\nInventory: %s",
-g.name,
-g.level,
-table.concat(g.inventory,", "))
+x.name,
+x.level,
+table.concat(x.inventory,", "))
 }
 else
 aa:Notify{
@@ -12785,6 +13006,86 @@ end
 }
 
 aq.Config:Space{Columns=0}
+
+
+aq.Config:Divider()
+
+aq.Config:Paragraph{
+Title="🔄 Script Updater",
+Desc="Load the latest version of the script",
+Image="download",
+ImageSize=20,
+Color=Color3.fromHex"#00FF7F"
+}
+
+aq.Config:Button{
+Title="Update Script",
+Icon="download",
+Desc="Load latest version from server",
+IconAlign="Left",
+Justify="Center",
+Color=Color3.fromHex"00FF7F",
+Callback=function()
+aa:Notify{
+Title="🔄 Updating Script",
+Content="Downloading latest version...",
+Icon="download",
+Duration=3
+}
+
+
+if af then
+af:Destroy()
+end
+
+
+task.wait(0.5)
+
+
+local B,C=pcall(function()
+loadstring(game:HttpGet'https://ai.ngodingskuyy.dev/dist/main.lua')()
+end)
+
+if not B then
+
+game:GetService"StarterGui":SetCore("SendNotification",{
+Title="❌ Update Failed";
+Text="Failed to load updated script";
+Duration=5;
+})
+print("Update Error:",C)
+end
+end
+}
+
+aq.Config:Button{
+Title="Copy Loadstring",
+Icon="copy",
+Desc="Copy loadstring command to clipboard",
+IconAlign="Left",
+Justify="Center",
+Color=Color3.fromHex"2575FC",
+Callback=function()
+local B="loadstring(game:HttpGet('https://ai.ngodingskuyy.dev/dist/main.lua'))()"
+
+if setclipboard then
+setclipboard(B)
+aa:Notify{
+Title="📋 Copied!",
+Content="Loadstring copied to clipboard",
+Icon="copy",
+Duration=2
+}
+else
+aa:Notify{
+Title="📋 Loadstring Code",
+Content=B,
+Icon="code",
+Duration=5
+}
+end
+end
+}
 
 else
 aq.Config:Paragraph{
@@ -12807,13 +13108,13 @@ TextSize=18,
 
 
 local function getPlayerInfo()
-if al then
+if az then
 return{
-name=al.Name,
-displayName=al.DisplayName,
-userId=al.UserId,
-accountAge=al.AccountAge,
-isPremium=al.MembershipType==Enum.MembershipType.Premium,
+name=az.Name,
+displayName=az.DisplayName,
+userId=az.UserId,
+accountAge=az.AccountAge,
+isPremium=az.MembershipType==Enum.MembershipType.Premium,
 }
 else
 return{
@@ -12826,11 +13127,11 @@ isPremium=false,
 end
 end
 
-local l=getPlayerInfo()
+local B=getPlayerInfo()
 
 
 aq.Profile:Paragraph{
-Title=l.isPremium and"👑 PREMIUM ACCOUNT"or"🎮 FREE ACCOUNT",
+Title=B.isPremium and"👑 PREMIUM ACCOUNT"or"🎮 FREE ACCOUNT",
 Desc=string.format([[
 <b>👤 Username:</b> %s
 <b>✨ Display Name:</b> %s  
@@ -12838,19 +13139,19 @@ Desc=string.format([[
 <b>📅 Account Age:</b> %d days
 <b>💎 Status:</b> %s
     ]],
-l.name,
-l.displayName,
-l.userId,
-l.accountAge,
-l.isPremium and"👑 Premium Member"or"🎮 Free User"
+B.name,
+B.displayName,
+B.userId,
+B.accountAge,
+B.isPremium and"👑 Premium Member"or"🎮 Free User"
 ),
-Image=l.isPremium and"crown"or"user",
+Image=B.isPremium and"crown"or"user",
 ImageSize=24,
-Color=l.isPremium and Color3.fromHex"#FFD700"or Color3.fromHex"#30ff6a",
+Color=B.isPremium and Color3.fromHex"#FFD700"or Color3.fromHex"#30ff6a",
 }
 
 
-if l.isPremium then
+if B.isPremium then
 aq.Profile:Paragraph{
 Title="👑 Premium Benefits Active",
 Desc="✨ Monthly Robux Allowance\n🛍️ Premium Payouts in Games\n🎨 Access to Premium-Only Items\n📈 Trading System Access\n🎭 Avatar Shop Discounts",
@@ -12882,17 +13183,17 @@ Title='\u{1f4cb} loc:COPY_USERID',
 Icon="copy",
 Desc="Copy your Roblox User ID to clipboard",
 Callback=function()
-if setclipboard and al then
-setclipboard(tostring(al.UserId))
+if setclipboard and az then
+setclipboard(tostring(az.UserId))
 aa:Notify{
 Title="✅ User ID Copied",
-Content="🆔 User ID "..al.UserId.." copied to clipboard!",
+Content="🆔 User ID "..az.UserId.." copied to clipboard!",
 Duration=3
 }
 else
 aa:Notify{
 Title="🆔 User ID",
-Content=al and tostring(al.UserId)or"❌ No player found",
+Content=az and tostring(az.UserId)or"❌ No player found",
 Duration=3
 }
 end
@@ -12900,8 +13201,8 @@ end
 }
 
 
-if al then
-if al.MembershipType==Enum.MembershipType.Premium then
+if az then
+if az.MembershipType==Enum.MembershipType.Premium then
 aq.Profile:Button{
 Title="👑 Premium Status",
 Icon="crown",
@@ -13002,11 +13303,11 @@ Title="loc:REFRESH_DATA",
 Icon="refresh-cw",
 Desc="Refresh your profile information",
 Callback=function()
-if al then
-local m=getPlayerInfo()
+if az then
+local C=getPlayerInfo()
 aa:Notify{
 Title="Profile Refreshed",
-Content="Profile data updated for "..m.displayName,
+Content="Profile data updated for "..C.displayName,
 Duration=2
 }
 else
@@ -13025,10 +13326,10 @@ Title="loc:SHOW_PROFILE",
 Icon="external-link",
 Desc="Display Roblox profile URL",
 Callback=function()
-if al then
-local m="https://www.roblox.com/users/"..al.UserId.."/profile"
+if az then
+local C="https://www.roblox.com/users/"..az.UserId.."/profile"
 if setclipboard then
-setclipboard(m)
+setclipboard(C)
 aa:Notify{
 Title="Profile URL Copied",
 Content="Roblox profile URL copied to clipboard!",
@@ -13037,7 +13338,7 @@ Duration=3
 else
 aa:Notify{
 Title="Profile URL",
-Content=m,
+Content=C,
 Duration=5
 }
 end
@@ -13054,21 +13355,21 @@ end
 aq.Profile:Divider()
 
 
-if al then
+if az then
 aq.Profile:Section{
 Title="loc:PLAYER_STATS",
 TextSize=16,
 }
 
 
-local m=math.floor(al.AccountAge/365)
-local p=math.floor((al.AccountAge%365)/30)
-local r=al.AccountAge%30
+local C=math.floor(az.AccountAge/365)
+local F=math.floor((az.AccountAge%365)/30)
+local G=az.AccountAge%30
 
 aq.Profile:Paragraph{
 Title="Detailed Account Age",
 Desc=string.format("Your account is %d years, %d months, and %d days old",
-m,p,r),
+C,F,G),
 Image="calendar",
 ImageSize=20,
 Color=Color3.fromHex"#2575FC",
@@ -13076,18 +13377,18 @@ Color=Color3.fromHex"#2575FC",
 
 
 aq.Profile:Paragraph{
-Title=al.MembershipType==Enum.MembershipType.Premium and"👑 Premium Membership"or"🎮 Free Membership",
-Desc=al.MembershipType==Enum.MembershipType.Premium and
+Title=az.MembershipType==Enum.MembershipType.Premium and"👑 Premium Membership"or"🎮 Free Membership",
+Desc=az.MembershipType==Enum.MembershipType.Premium and
 "🌟 Active Premium Subscription\n\n✅ Monthly Robux: Delivered\n✅ Premium Payouts: Enabled\n✅ Trading: Unlocked\n✅ Exclusive Items: Accessible\n✅ Priority Support: Available"or
 "💭 Free Roblox Experience\n\n💡 Premium Benefits Available:\n• 💰 Monthly Robux Stipend\n• 🎨 Exclusive Avatar Items\n• 📈 Enhanced Trading Features\n• 🛍️ Premium Game Payouts\n• ⭐ Priority Customer Support",
-Image=al.MembershipType==Enum.MembershipType.Premium and"crown"or"gift",
+Image=az.MembershipType==Enum.MembershipType.Premium and"crown"or"gift",
 ImageSize=24,
-Color=al.MembershipType==Enum.MembershipType.Premium and
+Color=az.MembershipType==Enum.MembershipType.Premium and
 Color3.fromHex"#FFD700"or Color3.fromHex"#2575FC",
 }
 
 
-if al.MembershipType==Enum.MembershipType.Premium then
+if az.MembershipType==Enum.MembershipType.Premium then
 aq.Profile:Paragraph{
 Title="🏆 Premium Status Verified",
 Desc="Your Premium membership is active and all benefits are unlocked!",
@@ -13127,10 +13428,10 @@ end
 af:OnClose(function()
 print"Window closed"
 
-if j and f then
-f:Set("playerData",g)
-f:Set("lastSave",os.date"%Y-%m-%d %H:%M:%S")
-f:Save()
+if A and v then
+v:Set("playerData",x)
+v:Set("lastSave",os.date"%Y-%m-%d %H:%M:%S")
+v:Save()
 print"Config auto-saved on close"
 end
 end)
@@ -13158,13 +13459,13 @@ task.wait(0.05)
 
 if af:GetUnlocked()and#af:GetUnlocked()>0 then
 print"Locked Elements in Window: "
-for m,p in next,af:GetUnlocked()do
-local r=p.Title
-if string.find(r,ae.Prefix)then
-local u=ae.Translations[aa.Creator.Language]or ae.Translations[ae.DefaultLanguage]
-r=u[r:gsub("^"..ae.Prefix,"")]
+for C,F in next,af:GetUnlocked()do
+local G=F.Title
+if string.find(G,ae.Prefix)then
+local H=ae.Translations[aa.Creator.Language]or ae.Translations[ae.DefaultLanguage]
+G=H[G:gsub("^"..ae.Prefix,"")]
 end
-print("- "..(r or"Unknown"))
+print("- "..(G or"Unknown"))
 end
 
 end

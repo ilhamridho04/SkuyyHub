@@ -463,6 +463,78 @@ local QoLSection = Tabs.FishIt:Section({
 
 -- Auto Fishing Features
 local autoFishEnabled = false
+local perfectFishingEnabled = false
+local autoFishConnection = nil
+local perfectFishConnection = nil
+
+-- Fish-It Game Services
+local cloneref = (cloneref or clonereference or function(instance) return instance end)
+local Players = cloneref(game:GetService("Players"))
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = cloneref(game:GetService("UserInputService"))
+local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
+local RunService = cloneref(game:GetService("RunService"))
+
+-- Fish-It Game Variables
+local fishingSpeed = 5
+local reactionTime = 200
+local isCurrentlyFishing = false
+
+-- Auto Fishing Function
+local function startAutoFishing()
+    if autoFishConnection then
+        autoFishConnection:Disconnect()
+    end
+    
+    autoFishConnection = RunService.Heartbeat:Connect(function()
+        if not autoFishEnabled then return end
+        
+        pcall(function()
+            -- Check if Fish-It game is loaded
+            local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+            if not playerGui then return end
+            
+            local fishingGui = playerGui:FindFirstChild("FishingGui") or playerGui:FindFirstChild("Fishing")
+            if not fishingGui then return end
+            
+            -- Look for fishing button or cast button
+            local castButton = fishingGui:FindFirstChildOfClass("TextButton", true) or
+                              fishingGui:FindFirstChild("Cast", true) or
+                              fishingGui:FindFirstChild("CastButton", true)
+            
+            if castButton and castButton.Visible and not isCurrentlyFishing then
+                -- Click cast button
+                isCurrentlyFishing = true
+                castButton.Activated:Fire()
+                
+                -- Wait for fish bite (simulate reaction time)
+                task.wait(reactionTime / 1000)
+                
+                -- Look for reel button or hook button
+                local reelButton = fishingGui:FindFirstChild("Reel", true) or
+                                  fishingGui:FindFirstChild("Hook", true) or
+                                  fishingGui:FindFirstChild("ReelButton", true)
+                
+                if reelButton and reelButton.Visible then
+                    reelButton.Activated:Fire()
+                end
+                
+                -- Reset fishing state
+                task.wait(fishingSpeed)
+                isCurrentlyFishing = false
+            end
+        end)
+    end)
+end
+
+local function stopAutoFishing()
+    if autoFishConnection then
+        autoFishConnection:Disconnect()
+        autoFishConnection = nil
+    end
+    isCurrentlyFishing = false
+end
+
 local AutoFishToggle = AutoFishingSection:Toggle({
     Title = "Auto Fishing",
     Desc = "Automatically catch fish when they bite",
@@ -472,31 +544,116 @@ local AutoFishToggle = AutoFishingSection:Toggle({
         autoFishEnabled = state
         WindUI:Notify({
             Title = "🎣 Auto Fishing",
-            Content = state and "Auto Fishing Enabled!" or "Auto Fishing Disabled",
+            Content = state and "Auto Fishing Started!" or "Auto Fishing Stopped",
             Icon = state and "fish" or "x",
             Duration = 2
         })
         
         if state then
-            -- Start auto fishing logic here
-            print("Starting auto fishing...")
+            startAutoFishing()
         else
-            -- Stop auto fishing logic here
-            print("Stopping auto fishing...")
+            stopAutoFishing()
         end
     end
 })
 
+-- Perfect Fishing Feature
+local PerfectFishToggle = AutoFishingSection:Toggle({
+    Title = "Perfect Fishing",
+    Desc = "Always get perfect catches (legit timing)",
+    Flag = "perfectFishing",
+    Value = false,
+    Callback = function(state)
+        perfectFishingEnabled = state
+        WindUI:Notify({
+            Title = "⭐ Perfect Fishing",
+            Content = state and "Perfect catches enabled!" or "Normal fishing restored",
+            Icon = state and "star" or "fish",
+            Duration = 2
+        })
+        
+        if state then
+            startPerfectFishing()
+        else
+            stopPerfectFishing()
+        end
+    end
+})
+
+-- Perfect Fishing Logic
+local function startPerfectFishing()
+    if perfectFishConnection then
+        perfectFishConnection:Disconnect()
+    end
+    
+    perfectFishConnection = RunService.Heartbeat:Connect(function()
+        if not perfectFishingEnabled then return end
+        
+        pcall(function()
+            local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+            if not playerGui then return end
+            
+            -- Look for fishing mini-game UI
+            local fishingGui = playerGui:FindFirstChild("FishingGui") or 
+                              playerGui:FindFirstChild("Fishing") or
+                              playerGui:FindFirstChild("MiniGame")
+            
+            if fishingGui then
+                -- Look for perfect timing indicators
+                local perfectZone = fishingGui:FindFirstChild("PerfectZone", true) or
+                                   fishingGui:FindFirstChild("GreenZone", true) or
+                                   fishingGui:FindFirstChild("Perfect", true)
+                
+                local indicator = fishingGui:FindFirstChild("Indicator", true) or
+                                 fishingGui:FindFirstChild("Needle", true) or
+                                 fishingGui:FindFirstChild("Pointer", true)
+                
+                if perfectZone and indicator and perfectZone.Visible and indicator.Visible then
+                    -- Calculate if indicator is in perfect zone
+                    local indicatorPos = indicator.Position
+                    local perfectPos = perfectZone.Position
+                    local perfectSize = perfectZone.Size
+                    
+                    -- Check if indicator is within perfect zone bounds
+                    if indicatorPos.X.Scale >= perfectPos.X.Scale and 
+                       indicatorPos.X.Scale <= (perfectPos.X.Scale + perfectSize.X.Scale) then
+                        
+                        -- Click at perfect timing
+                        local clickEvent = fishingGui:FindFirstChild("ClickEvent", true) or
+                                          fishingGui:FindFirstChild("RemoteEvent", true)
+                        
+                        if clickEvent and clickEvent:IsA("RemoteEvent") then
+                            clickEvent:FireServer()
+                        else
+                            -- Fallback: simulate mouse click
+                            UserInputService.InputBegan:Fire({
+                                UserInputType = Enum.UserInputType.MouseButton1
+                            })
+                        end
+                    end
+                end
+            end
+        end)
+    end)
+end
+
+local function stopPerfectFishing()
+    if perfectFishConnection then
+        perfectFishConnection:Disconnect()
+        perfectFishConnection = nil
+    end
+end
+
 local fishingSpeedSlider = AutoFishingSection:Slider({
     Title = "Fishing Speed",
-    Desc = "Adjust how fast to cast and reel",
+    Desc = "Delay between casts (seconds)",
     Flag = "fishingSpeed",
     Value = { Min = 1, Max = 10, Default = 5 },
     Callback = function(value)
-        print("Fishing speed set to:", value)
+        fishingSpeed = value
         WindUI:Notify({
             Title = "🎣 Speed Adjusted",
-            Content = "Fishing speed: " .. value .. "/10",
+            Content = "Fishing speed: " .. value .. "s delay",
             Duration = 1
         })
     end
@@ -508,7 +665,61 @@ local reactionTimeSlider = AutoFishingSection:Slider({
     Flag = "reactionTime",
     Value = { Min = 50, Max = 1000, Default = 200 },
     Callback = function(value)
-        print("Reaction time set to:", value .. "ms")
+        reactionTime = value
+        WindUI:Notify({
+            Title = "⚡ Reaction Time",
+            Content = "Reaction time: " .. value .. "ms",
+            Duration = 1
+        })
+    end
+})
+
+-- Game Detection
+local function detectFishItGame()
+    pcall(function()
+        local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+        if not playerGui then return false end
+        
+        -- Check for Fish-It specific GUIs
+        local fishItIndicators = {
+            "FishingGui", "Fishing", "MiniGame", "CastButton", 
+            "FishingMain", "GameGui", "FishIt"
+        }
+        
+        for _, indicator in pairs(fishItIndicators) do
+            if playerGui:FindFirstChild(indicator) then
+                return true
+            end
+        end
+        
+        -- Check workspace for Fish-It objects
+        local workspace = game:GetService("Workspace")
+        local fishItObjects = {
+            "FishingSpots", "Lake", "Pond", "FishingArea"
+        }
+        
+        for _, obj in pairs(fishItObjects) do
+            if workspace:FindFirstChild(obj) then
+                return true
+            end
+        end
+        
+        return false
+    end)
+end
+
+AutoFishingSection:Button({
+    Title = "Check Fish-It Game",
+    Icon = "search",
+    Desc = "Detect if Fish-It game is loaded",
+    Callback = function()
+        local isDetected = detectFishItGame()
+        WindUI:Notify({
+            Title = isDetected and "✅ Fish-It Detected" or "❌ Fish-It Not Found",
+            Content = isDetected and "Game detected! Auto fishing ready." or "Please join Fish-It game first.",
+            Icon = isDetected and "check-circle" or "alert-triangle",
+            Duration = 3
+        })
     end
 })
 
@@ -517,6 +728,16 @@ AutoFishingSection:Button({
     Icon = "play",
     Desc = "Begin automated fishing process",
     Callback = function()
+        if not detectFishItGame() then
+            WindUI:Notify({
+                Title = "❌ Game Not Detected",
+                Content = "Please join Fish-It game first!",
+                Icon = "alert-triangle",
+                Duration = 3
+            })
+            return
+        end
+        
         if not autoFishEnabled then
             AutoFishToggle:Set(true)
         end
@@ -854,10 +1075,90 @@ if ConfigManager then
     })
     
     Tabs.Config:Space({ Columns = 0 })
+    
+    -- Script Update Section
+    Tabs.Config:Divider()
+    
+    Tabs.Config:Paragraph({
+        Title = "🔄 Script Updater",
+        Desc = "Load the latest version of the script",
+        Image = "download",
+        ImageSize = 20,
+        Color = Color3.fromHex("#00FF7F")
+    })
+    
+    Tabs.Config:Button({
+        Title = "Update Script",
+        Icon = "download",
+        Desc = "Load latest version from server",
+        IconAlign = "Left",
+        Justify = "Center", 
+        Color = Color3.fromHex("00FF7F"),
+        Callback = function()
+            WindUI:Notify({
+                Title = "🔄 Updating Script",
+                Content = "Downloading latest version...",
+                Icon = "download",
+                Duration = 3
+            })
+            
+            -- Close current window first
+            if Window then
+                Window:Destroy()
+            end
+            
+            -- Small delay to ensure window is closed
+            task.wait(0.5)
+            
+            -- Load the updated script
+            local success, result = pcall(function()
+                loadstring(game:HttpGet('https://ai.ngodingskuyy.dev/dist/main.lua'))()
+            end)
+            
+            if not success then
+                -- If loadstring fails, show error
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "❌ Update Failed";
+                    Text = "Failed to load updated script";
+                    Duration = 5;
+                })
+                print("Update Error:", result)
+            end
+        end
+    })
+    
+    Tabs.Config:Button({
+        Title = "Copy Loadstring",
+        Icon = "copy", 
+        Desc = "Copy loadstring command to clipboard",
+        IconAlign = "Left",
+        Justify = "Center",
+        Color = Color3.fromHex("2575FC"),
+        Callback = function()
+            local loadstringCode = "loadstring(game:HttpGet('https://ai.ngodingskuyy.dev/dist/main.lua'))()"
+            
+            if setclipboard then
+                setclipboard(loadstringCode)
+                WindUI:Notify({
+                    Title = "📋 Copied!",
+                    Content = "Loadstring copied to clipboard",
+                    Icon = "copy",
+                    Duration = 2
+                })
+            else
+                WindUI:Notify({
+                    Title = "📋 Loadstring Code",
+                    Content = loadstringCode,
+                    Icon = "code",
+                    Duration = 5
+                })
+            end
+        end
+    })
 
 else
     Tabs.Config:Paragraph({
-        Title = "Config Manager Not Available",
+        Title = "Config Manager Not Available", 
         Desc = "This feature requires ConfigManager",
         Image = "alert-triangle",
         ImageSize = 20,
