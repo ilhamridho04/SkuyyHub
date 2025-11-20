@@ -74,6 +74,14 @@ config.Flag = "uniqueIdentifier"  -- For config saving
 -- Parser in src/config/Init.lua handles serialization
 ```
 
+### Element Loading System
+Components are dynamically loaded via `src/elements/Init.lua`:
+```lua
+-- Elements registry loads modules and injects dependencies
+Elements.Load(tbl, Container, Elements, Window, WindUI, OnElementCreateFunction, ElementsModule, UIScale, Tab)
+-- Each element receives: Tab, ParentTable, Index, GlobalIndex, Parent, Window, WindUI, UIScale
+```
+
 ## Critical Conventions
 
 1. **Theme Integration**: All components must use `Creator.Theme` colors, never hardcoded colors
