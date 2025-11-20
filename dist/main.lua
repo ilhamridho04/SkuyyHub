@@ -11952,7 +11952,36 @@ Translations={en=
 "Load Configuration",THEME_SELECT=
 "Select Theme",TRANSPARENCY=
 "Window Transparency",LOCKED_TAB=
-"Locked Tab"
+"Locked Tab",USER_PROFILE=
+"User Profile",PROFILE_CLICKED=
+"Profile menu opened!",PLAYER_ID=
+"Player ID",USERNAME=
+"Username",DISPLAY_NAME=
+"Display Name",ACCOUNT_AGE=
+"Account Age",PREMIUM_STATUS=
+"Premium Status",ROBUX_BALANCE=
+"Robux Balance",JOIN_DATE=
+"Join Date",PROFILE_INFO=
+"Profile Information",SHOW_PROFILE=
+"Show Roblox Profile",COPY_USERID=
+"Copy User ID",REFRESH_DATA=
+"Refresh Profile Data",DAYS_OLD=
+"days old",PREMIUM_USER=
+"Premium User",NON_PREMIUM=
+"Non-Premium",PROFILE_UPDATED=
+"Profile data updated!",ERROR_LOADING=
+"Error loading profile data",PROFILE_TAB=
+"Profile",PROFILE_TOOLS=
+"Profile Tools",CURRENT_PLAYER=
+"Current Player",PLAYER_STATS=
+"Player Statistics",ACCOUNT_INFO=
+"Account Information",PREMIUM_BADGE=
+"👑 PREMIUM",FREE_BADGE=
+"🎮 FREE",PREMIUM_BENEFITS=
+"Premium Benefits",UPGRADE_TO_PREMIUM=
+"Upgrade to Premium",PREMIUM_PERKS=
+"✨ Monthly Robux\n🛍️ Premium Payouts\n🎨 Exclusive Items\n📈 Trading Access",FREE_USER_INFO=
+"🎮 You're using Roblox for free!\n💡 Consider Premium for extra benefits."
 }
 }
 }
@@ -12048,13 +12077,125 @@ NewElements=false,
 
 User={
 Enabled=true,
-Anonymous=true,
+Anonymous=false,
+Premium={
+Enabled=true,
+ShowBadge=true,
+PremiumIcon="crown",
+FreeIcon="gamepad-2"
+},
 Callback=function()
+
+local af=(cloneref or clonereference or function(af)return af end)
+local ah=af(game:GetService"Players")
+local aj=ah.LocalPlayer
+
+if aj then
+
+local al=aj.MembershipType==Enum.MembershipType.Premium
+local am=al and"👑 PREMIUM"or"🎮 FREE"
+
+
+local ao=require(aa.Creator.Root.."/src/components/popup/Init")
+
+
+ao.new{
+Title="loc:USER_PROFILE "..am,
+Icon=al and"crown"or"user",
+IconThemed=true,
+WindUI=aa,
+Content=string.format([[
+<b>🎮 Profile Information</b>
+
+<b>👤 Username:</b> %s
+<b>✨ Display Name:</b> %s  
+<b>🆔 Player ID:</b> %d
+<b>📅 Account Age:</b> %d days old
+<b>💎 Premium Status:</b> %s
+
+%s
+
+<i>Use the buttons below for quick actions or close this dialog.</i>
+                    ]],
+aj.Name,
+aj.DisplayName,
+aj.UserId,
+aj.AccountAge,
+aj.MembershipType==Enum.MembershipType.Premium and"👑 PREMIUM MEMBER"or"🎮 FREE USER",
+aj.MembershipType==Enum.MembershipType.Premium and"✨ Enjoying all Premium benefits!"or"💡 Consider upgrading to Premium for exclusive features!"
+),
+Buttons={
+{
+Title="View Profile",
+Icon="external-link",
+Variant="Primary",
+Callback=function()
+
+local ap="https://www.roblox.com/users/"..aj.UserId.."/profile"
+if setclipboard then
+setclipboard(ap)
 aa:Notify{
-Title="User Profile",
-Content="User profile clicked!",
+Title="Profile URL Copied",
+Content="Roblox profile URL copied to clipboard!",
 Duration=3
 }
+else
+aa:Notify{
+Title="Profile Info",
+Content="Player ID: "..aj.UserId,
+Duration=3
+}
+end
+end
+},
+{
+Title="Copy User ID",
+Icon="copy",
+Callback=function()
+if setclipboard then
+setclipboard(tostring(aj.UserId))
+aa:Notify{
+Title="Copied!",
+Content="User ID copied: "..aj.UserId,
+Duration=2
+}
+else
+aa:Notify{
+Title="Player ID",
+Content=tostring(aj.UserId),
+Duration=3
+}
+end
+end
+},
+{
+Title="Refresh",
+Icon="refresh-cw",
+Callback=function()
+aa:Notify{
+Title="Profile Updated",
+Content="Data refreshed for "..aj.DisplayName,
+Duration=2
+}
+end
+},
+{
+Title="Close",
+Icon="x",
+Variant="Tertiary",
+Callback=function()
+
+end
+}
+}
+}
+else
+aa:Notify{
+Title="Error",
+Content="Unable to get player information",
+Duration=3
+}
+end
 end
 },
 Acrylic=false,
@@ -12129,7 +12270,20 @@ Color3.fromHex"#e7ff2f"
 
 
 
+
+local ah=(cloneref or clonereference or function(ah)return ah end)
+local aj=ah(game:GetService"Players")
+local al=aj.LocalPlayer
+
+if al then
+
+af.User:SetAnonymous(false)
+
+else
+
 af.User:SetAnonymous(true)
+end
+
 
 
 
@@ -12145,7 +12299,7 @@ af:Tag{
 Title="Beta",
 Color=Color3.fromHex"#315dff"
 }
-local ah=af:Tag{
+local am=af:Tag{
 Title="--:--",
 Radius=0,
 
@@ -12158,19 +12312,19 @@ Rotation=45,
 }
 
 
-local aj=0
+local ao=0
 
 
 task.spawn(function()
 while true do
-local al=os.date"*t"
-local am=string.format("%02d",al.hour)
-local ao=string.format("%02d",al.min)
+local ap=os.date"*t"
+local aq=string.format("%02d",ap.hour)
+local ar=string.format("%02d",ap.min)
 
-aj=(aj+0.01)%1
-Color3.fromHSV(aj,1,1)
+ao=(ao+0.01)%1
+Color3.fromHSV(ao,1,1)
 
-ah:SetTitle(am..":"..ao)
+am:SetTitle(aq..":"..ar)
 
 
 task.wait(0.06)
@@ -12187,223 +12341,236 @@ Duration=2
 }
 end,990)
 
-local al={
+local ap={
 Main=af:Section{Title="loc:FEATURES",Opened=true},
 Settings=af:Section{Title="loc:SETTINGS",Opened=true},
 Utilities=af:Section{Title="loc:UTILITIES",Opened=true}
 }
 
-local am={
-Elements=al.Main:Tab{Title="loc:UI_ELEMENTS",Icon="layout-grid",Desc="UI Elements Example"},
-Appearance=al.Settings:Tab{Title="loc:APPEARANCE",Icon="brush"},
-Config=al.Utilities:Tab{Title="loc:CONFIGURATION",Icon="settings"},
-LockedTab1=af:Tab{Title="loc:LOCKED_TAB",Icon="bird",Locked=true,},
-LockedTab2=af:Tab{Title="loc:LOCKED_TAB",Icon="bird",Locked=true,},
-LockedTab3=af:Tab{Title="loc:LOCKED_TAB",Icon="bird",Locked=true,},
-LockedTab4=af:Tab{Title="loc:LOCKED_TAB",Icon="bird",Locked=true,},
-LockedTab5=af:Tab{Title="loc:LOCKED_TAB",Icon="bird",Locked=true,},
+local aq={
+FishIt=ap.Main:Tab{Title="🎣 Fish-It",Icon="fish",Desc="Fish-It Game Features"},
+Appearance=ap.Settings:Tab{Title="loc:APPEARANCE",Icon="brush"},
+Config=ap.Utilities:Tab{Title="loc:CONFIGURATION",Icon="settings"},
+Profile=ap.Utilities:Tab{Title="loc:PROFILE_TAB",Icon="user",Desc="Roblox Profile Information"},
 }
 
 
-
-
-
-
-
-
-
-am.Elements:Section{
-Title="Interactive Components",
-TextSize=20,
+aq.FishIt:Paragraph{
+Title="🎣 Fish-It Auto Features",
+Desc="Automated fishing tools for Fish-It game",
+Image="fish",
+ImageSize=24,
+Color=Color3.fromHex"#00BFFF",
 }
 
-am.Elements:Section{
-Title="Explore WindUI's powerful elements",
-TextSize=16,
-TextTransparency=.25,
-}
+aq.FishIt:Divider()
 
 
-am.Elements:Divider()
-
-local ao=am.Elements:Section{
-Title="Section Example",
-Icon="bird",
-TextXAlignment="Center",
+local ar=aq.FishIt:Section{
+Title="🎣 Auto Fishing",
+Icon="fish",
+TextXAlignment="Left",
 Opened=true,
 Box=true,
 }
 
-am.Elements:Section{
-Title="Section Example 2",
 
-TextXAlignment="Center",
+local as=aq.FishIt:Section{
+Title="💰 Auto Sell",
+Icon="dollar-sign",
+TextXAlignment="Left",
 Opened=true,
 Box=true,
 }
 
-am.Elements:Section{
-Title="Section Example 2",
 
-TextXAlignment="Center",
+local at=aq.FishIt:Section{
+Title="⚡ Quality of Life",
+Icon="zap",
+TextXAlignment="Left",
 Opened=true,
-
+Box=true,
 }
 
-local ap=false
-ao:Toggle{
-Title="Enable Features",
 
-Flag="featureToggle",
+local au=false
+local av=ar:Toggle{
+Title="Auto Fishing",
+Desc="Automatically catch fish when they bite",
+Flag="autoFishing",
 Value=false,
-Callback=function(aq)
-ap=aq
+Callback=function(av)
+au=av
 aa:Notify{
-Title="Features",
-Content=aq and"Features Enabled"or"Features Disabled",
-Icon=aq and"check"or"x",
+Title="🎣 Auto Fishing",
+Content=av and"Auto Fishing Enabled!"or"Auto Fishing Disabled",
+Icon=av and"fish"or"x",
+Duration=2
+}
+
+if av then
+
+print"Starting auto fishing..."
+else
+
+print"Stopping auto fishing..."
+end
+end
+}
+
+ar:Slider{
+Title="Fishing Speed",
+Desc="Adjust how fast to cast and reel",
+Flag="fishingSpeed",
+Value={Min=1,Max=10,Default=5},
+Callback=function(aw)
+print("Fishing speed set to:",aw)
+aa:Notify{
+Title="🎣 Speed Adjusted",
+Content="Fishing speed: "..aw.."/10",
+Duration=1
+}
+end
+}
+
+ar:Slider{
+Title="Reaction Time (ms)",
+Desc="Delay before hooking fish (lower = faster)",
+Flag="reactionTime",
+Value={Min=50,Max=1000,Default=200},
+Callback=function(aw)
+print("Reaction time set to:",aw.."ms")
+end
+}
+
+ar:Button{
+Title="Start Auto Fishing",
+Icon="play",
+Desc="Begin automated fishing process",
+Callback=function()
+if not au then
+av:Set(true)
+end
+aa:Notify{
+Title="🎣 Auto Fishing",
+Content="Starting automated fishing session!",
+Icon="fish",
 Duration=2
 }
 end
 }
 
-local aq=ao:Slider{
-Title="Effect Intensity",
-Desc="Adjust the effect strength",
-Flag="intensitySlider",
-Value={Min=0,Max=100,Default=50},
-Callback=function(aq)
-print("Intensity set to:",aq)
+
+local aw=false
+as:Toggle{
+Title="Auto Sell Fish",
+Desc="Automatically sell caught fish",
+Flag="autoSell",
+Value=false,
+Callback=function(ax)
+aw=ax
+aa:Notify{
+Title="💰 Auto Sell",
+Content=ax and"Auto Sell Enabled!"or"Auto Sell Disabled",
+Icon=ax and"dollar-sign"or"x",
+Duration=2
+}
 end
 }
 
-aq:SetMin(20)
-aq:SetMax(200)
-aq:Set(100)
-
-
-local ar={}
-local as={}
-
-
-local at=aa.Creator.Icons.Icons.lucide.Icons
-local au={}
-
-for av,aw in next,at do
-table.insert(au,av)
-end
-
-for av=1,80 do
-local aw=au[math.random(1,#au)]
-table.insert(ar,{Title="Test "..av,Icon=aw})
-end
-
-for av=1,2 do
-table.insert(as,"Test "..av)
-end
-
-ao:Space()
-
-
-ao:Dropdown{
-Title="Dropdown test",
-Values=ar,
-Flag="testDropdown",
-SearchBarEnabled=true,
-Value="Test 1",
-Callback=function(av)
-
-
-
-
-
-end
-}
-
-ao:Dropdown{
-Title="Dropdown test 2",
-Flag="testDropdown2",
-Values={
-{
-Title="Test 1",
-Icon="bird",
-},
-{
-Title="Test 2",
-Icon="house",
-},
-{
-Title="Test 3",
-Icon="droplet",
-},
-{
-Title="Test 4",
-Icon="user",
-},
-},
-SearchBarEnabled=true,
-Value="Test 1",
-Callback=function(av)
-print("Selected: "..av.Title.." with icon: "..av.Icon)
-end
-}
-
-local av=ao:Dropdown{
-Title="Dropdown test 3",
-Flag="testDropdown3",
-Values=ar,
-SearchBarEnabled=true,
-Value="Test 1",
-Callback=function(av)
-
-
-
-
-
+as:Slider{
+Title="Minimum Sell Price",
+Desc="Only sell fish worth more than this amount",
+Flag="minSellPrice",
+Value={Min=0,Max=10000,Default=100},
+Callback=function(ax)
+print("Minimum sell price:",ax)
 end
 }
 
 
-av:Refresh(as)
+local ax={
+{Title="All Fish",Icon="fish"},
+{Title="Common Fish",Icon="fish"},
+{Title="Rare Fish",Icon="star"},
+{Title="Epic Fish",Icon="crown"},
+{Title="Legendary Fish",Icon="diamond"},
+}
 
-ao:Divider()
+as:Dropdown{
+Title="Fish Types to Sell",
+Flag="fishTypesToSell",
+Values=ax,
+Value="All Fish",
+Callback=function(ay)
+aa:Notify{
+Title="🐟 Fish Filter",
+Content="Will sell: "..ay.Title,
+Duration=2
+}
+end
+}
 
-ao:Button{
-Title="Show Notification",
-Icon="bell",
+as:Button{
+Title="Sell All Fish Now",
+Icon="dollar-sign",
+Desc="Immediately sell all fish in inventory",
 Callback=function()
 aa:Notify{
-Title="Hello WindUI!",
-Content="This is a sample notification",
-Icon="bell",
+Title="💰 Selling Fish",
+Content="Selling all fish in inventory...",
+Icon="dollar-sign",
 Duration=3
 }
+
 end
 }
 
-ao:Colorpicker{
-Title="Select Color",
 
-Default=Color3.fromHex"#30ff6a",
-Transparency=0,
-Callback=function(aw,ax)
+at:Toggle{
+Title="Auto Equip Best Rod",
+Desc="Automatically equip the best fishing rod",
+Flag="autoEquipBestRod",
+Value=false,
+Callback=function(ay)
 aa:Notify{
-Title="Color Changed",
-Content="New color: "..aw:ToHex().."\nTransparency: "..ax,
+Title="🎣 Auto Equip",
+Content=ay and"Will auto-equip best rod!"or"Auto-equip disabled",
 Duration=2
 }
 end
 }
 
-ao:Code{
-Title="my_code.luau",
-Code=[[print("Hello world!")]],
-OnCopy=function()
-print"Copied to clipboard!"
+at:Toggle{
+Title="Infinite Stamina",
+Desc="Never run out of stamina while fishing",
+Flag="infiniteStamina",
+Value=false,
+Callback=function(ay)
+aa:Notify{
+Title="⚡ Infinite Stamina",
+Content=ay and"Infinite stamina enabled!"or"Normal stamina restored",
+Duration=2
+}
 end
 }
 
-am.Appearance:Paragraph{
+at:Button{
+Title="Teleport to Best Spot",
+Icon="map-pin",
+Desc="Teleport to the best fishing location",
+Callback=function()
+aa:Notify{
+Title="🗺️ Teleporting",
+Content="Moving to best fishing spot...",
+Icon="map-pin",
+Duration=2
+}
+
+end
+}
+
+aq.Appearance:Paragraph{
 Title="Customize Interface",
 Desc="Personalize your experience",
 Image="palette",
@@ -12411,38 +12578,38 @@ ImageSize=20,
 Color="White"
 }
 
-local aw={}
-for ax,ay in pairs(aa:GetThemes())do
-table.insert(aw,ax)
+local ay={}
+for az,aA in pairs(aa:GetThemes())do
+table.insert(ay,az)
 end
-table.sort(aw)
+table.sort(ay)
 
-local ax=true
-local ay=true
+local az=true
+local aA=true
 
 
 
-local az=am.Appearance:Dropdown{
+local aB=aq.Appearance:Dropdown{
 Title="loc:THEME_SELECT",
-Values=aw,
+Values=ay,
 Flag="themeDropdown",
 SearchBarEnabled=true,
 MenuWidth=280,
 Value="Dark",
-Callback=function(az)
-ay=false
-aa:SetTheme(az)
+Callback=function(aB)
+aA=false
+aa:SetTheme(aB)
 aa:Notify{
 Title="Theme Applied",
-Content=az,
+Content=aB,
 Icon="palette",
 Duration=2
 }
-ay=true
+aA=true
 end
 }
 
-am.Appearance:Slider{
+aq.Appearance:Slider{
 Title="loc:TRANSPARENCY",
 Value={
 Min=0,
@@ -12451,34 +12618,34 @@ Default=0,
 },
 Flag="transparencySlider",
 Step=0.1,
-Callback=function(aA)
-af:SetBackgroundTransparency(aA)
-af:SetBackgroundImageTransparency(aA)
+Callback=function(b)
+af:SetBackgroundTransparency(b)
+af:SetBackgroundImageTransparency(b)
 end
 }
 
-local aA=am.Appearance:Toggle{
+local b=aq.Appearance:Toggle{
 Title="Enable Dark Mode",
 Desc="Use dark color scheme",
 Value=true,
-Callback=function(aA)
-if ax then
-aa:SetTheme(aA and"Dark"or"Light")
+Callback=function(b)
+if az then
+aa:SetTheme(b and"Dark"or"Light")
 end
-if ay then
-az:Select(aA and"Dark"or"Light")
+if aA then
+aB:Select(b and"Dark"or"Light")
 end
 end
 }
 
-aa:OnThemeChange(function(aB)
-ax=false
-aA:Set(aB=="Dark")
-ax=true
+aa:OnThemeChange(function(d)
+az=false
+b:Set(d=="Dark")
+az=true
 end)
 
 
-am.Appearance:Button{
+aq.Appearance:Button{
 Title="Create New Theme",
 Icon="plus",
 Callback=function()
@@ -12495,7 +12662,7 @@ Variant="Primary"
 end
 }
 
-am.Config:Paragraph{
+aq.Config:Paragraph{
 Title="Configuration Manager",
 Desc="Save and load your settings",
 Image="save",
@@ -12503,48 +12670,48 @@ ImageSize=20,
 Color="White"
 }
 
-local aB="default"
-local b
-local d={
+local d="default"
+local f
+local g={
 name="Player1",
 level=1,
 inventory={"sword","shield","potion"}
 }
 
-local f=am.Config:Input{
+local h=aq.Config:Input{
 Title="Config Name",
-Value=aB,
-Callback=function(f)
-aB=f or"default"
-end
-}
-
-local g=af.ConfigManager
-
-am.Config:Dropdown{
-Title="Select Config",
-Values=g:AllConfigs(),
-Value=aB,
-AllowNone=false,
+Value=d,
 Callback=function(h)
-aB=h or"default"
-f:Set(aB)
+d=h or"default"
 end
 }
 
-if g then
-g:Init(af)
+local j=af.ConfigManager
 
-am.Config:Space{Columns=0}
+aq.Config:Dropdown{
+Title="Select Config",
+Values=j:AllConfigs(),
+Value=d,
+AllowNone=false,
+Callback=function(l)
+d=l or"default"
+h:Set(d)
+end
+}
 
-am.Config:Button{
+if j then
+j:Init(af)
+
+aq.Config:Space{Columns=0}
+
+aq.Config:Button{
 Title="loc:SAVE_CONFIG",
 Icon="save",
 IconAlign="Left",
 Justify="Center",
 Color=Color3.fromHex"315dff",
 Callback=function()
-b=g:CreateConfig(aB)
+f=j:CreateConfig(d)
 
 
 
@@ -12552,13 +12719,13 @@ b=g:CreateConfig(aB)
 
 
 
-b:Set("playerData",d)
-b:Set("lastSave",os.date"%Y-%m-%d %H:%M:%S")
+f:Set("playerData",g)
+f:Set("lastSave",os.date"%Y-%m-%d %H:%M:%S")
 
-if b:Save()then
+if f:Save()then
 aa:Notify{
 Title="loc:SAVE_CONFIG",
-Content="Saved as: "..aB,
+Content="Saved as: "..d,
 Icon="check",
 Duration=3
 }
@@ -12573,38 +12740,38 @@ end
 end
 }
 
-am.Config:Space{Columns=-1}
+aq.Config:Space{Columns=-1}
 
 
-am.Config:Button{
+aq.Config:Button{
 Title="loc:LOAD_CONFIG",
 IconAlign="Left",
 Justify="Center",
 Color=Color3.fromHex"315dff",
 Icon="folder",
 Callback=function()
-b=g:CreateConfig(aB)
-local h=b:Load()
+f=j:CreateConfig(d)
+local l=f:Load()
 
-if h then
-if h.playerData then
-d=h.playerData
+if l then
+if l.playerData then
+g=l.playerData
 end
 
-local j=h.lastSave or"Unknown"
+local m=l.lastSave or"Unknown"
 aa:Notify{
 Title="loc:LOAD_CONFIG",
-Content="Loaded: "..aB.."\nLast save: "..j,
+Content="Loaded: "..d.."\nLast save: "..m,
 Icon="refresh-cw",
 Duration=5
 }
 
-am.Config:Paragraph{
+aq.Config:Paragraph{
 Title="Player Data",
 Desc=string.format("Name: %s\nLevel: %d\nInventory: %s",
-d.name,
-d.level,
-table.concat(d.inventory,", "))
+g.name,
+g.level,
+table.concat(g.inventory,", "))
 }
 else
 aa:Notify{
@@ -12617,10 +12784,10 @@ end
 end
 }
 
-am.Config:Space{Columns=0}
+aq.Config:Space{Columns=0}
 
 else
-am.Config:Paragraph{
+aq.Config:Paragraph{
 Title="Config Manager Not Available",
 Desc="This feature requires ConfigManager",
 Image="alert-triangle",
@@ -12630,8 +12797,311 @@ Color="White"
 end
 
 
+
+
+
+aq.Profile:Section{
+Title="loc:CURRENT_PLAYER",
+TextSize=18,
+}
+
+
+local function getPlayerInfo()
+if al then
+return{
+name=al.Name,
+displayName=al.DisplayName,
+userId=al.UserId,
+accountAge=al.AccountAge,
+isPremium=al.MembershipType==Enum.MembershipType.Premium,
+}
+else
+return{
+name="Unknown",
+displayName="Unknown",
+userId=0,
+accountAge=0,
+isPremium=false,
+}
+end
+end
+
+local l=getPlayerInfo()
+
+
+aq.Profile:Paragraph{
+Title=l.isPremium and"👑 PREMIUM ACCOUNT"or"🎮 FREE ACCOUNT",
+Desc=string.format([[
+<b>👤 Username:</b> %s
+<b>✨ Display Name:</b> %s  
+<b>🆔 User ID:</b> %d
+<b>📅 Account Age:</b> %d days
+<b>💎 Status:</b> %s
+    ]],
+l.name,
+l.displayName,
+l.userId,
+l.accountAge,
+l.isPremium and"👑 Premium Member"or"🎮 Free User"
+),
+Image=l.isPremium and"crown"or"user",
+ImageSize=24,
+Color=l.isPremium and Color3.fromHex"#FFD700"or Color3.fromHex"#30ff6a",
+}
+
+
+if l.isPremium then
+aq.Profile:Paragraph{
+Title="👑 Premium Benefits Active",
+Desc="✨ Monthly Robux Allowance\n🛍️ Premium Payouts in Games\n🎨 Access to Premium-Only Items\n📈 Trading System Access\n🎭 Avatar Shop Discounts",
+Image="star",
+ImageSize=20,
+Color=Color3.fromHex"#FFD700",
+}
+else
+aq.Profile:Paragraph{
+Title="💡 Upgrade to Premium",
+Desc="🎮 You're currently using Roblox for free!\n\n💎 Premium gives you:\n• Monthly Robux\n• Premium Payouts\n• Exclusive Items\n• Trading Access\n• And much more!",
+Image="gift",
+ImageSize=20,
+Color=Color3.fromHex"#666666",
+}
+end
+
+aq.Profile:Divider()
+
+
+aq.Profile:Section{
+Title="loc:PROFILE_TOOLS",
+TextSize=16,
+}
+
+
+aq.Profile:Button{
+Title='\u{1f4cb} loc:COPY_USERID',
+Icon="copy",
+Desc="Copy your Roblox User ID to clipboard",
+Callback=function()
+if setclipboard and al then
+setclipboard(tostring(al.UserId))
+aa:Notify{
+Title="✅ User ID Copied",
+Content="🆔 User ID "..al.UserId.." copied to clipboard!",
+Duration=3
+}
+else
+aa:Notify{
+Title="🆔 User ID",
+Content=al and tostring(al.UserId)or"❌ No player found",
+Duration=3
+}
+end
+end
+}
+
+
+if al then
+if al.MembershipType==Enum.MembershipType.Premium then
+aq.Profile:Button{
+Title="👑 Premium Status",
+Icon="crown",
+Desc="View your Premium membership benefits",
+Callback=function()
+aa:Popup{
+Title="👑 Premium Membership",
+Icon="crown",
+Content=[[
+<b>🌟 Your Premium Benefits</b>
+
+✅ <b>Monthly Robux Stipend</b>
+   Receive Robux monthly based on your membership
+
+✅ <b>Premium Payouts</b> 
+   Earn more from games you play
+
+✅ <b>Exclusive Avatar Shop</b>
+   Access Premium-only items and discounts
+
+✅ <b>Trading System</b>
+   Trade Limited items with other users
+
+✅ <b>Priority Support</b>
+   Get faster help when you need it
+
+<b>Thank you for supporting Roblox!</b>
+                    ]],
+Buttons={
+{
+Title="🎁 Claim Monthly Robux",
+Icon="gift",
+Variant="Primary",
+Callback=function()
+aa:Notify{
+Title="🎁 Premium Robux",
+Content="Visit Roblox.com to claim your monthly Robux!",
+Duration=4
+}
+end
+}
+}
+}
+end
+}
+else
+aq.Profile:Button{
+Title="⭐ Get Premium",
+Icon="star",
+Desc="Learn about Roblox Premium benefits",
+Callback=function()
+aa:Popup{
+Title="⭐ Roblox Premium",
+Icon="star",
+Content=[[
+<b>🎮 Why Upgrade to Premium?</b>
+
+💰 <b>Monthly Robux</b>
+   Get Robux every month to spend on games and items
+
+🏆 <b>Premium Payouts</b>
+   Earn more Robux from games you play
+
+🛍️ <b>Exclusive Items</b>
+   Access special avatar items and discounts
+
+📈 <b>Trading</b>
+   Trade Limited items with other players
+
+⚡ <b>Priority Support</b>
+   Get faster customer service
+
+<b>Ready to upgrade your Roblox experience?</b>
+                    ]],
+Buttons={
+{
+Title="💎 Learn More",
+Icon="external-link",
+Variant="Primary",
+Callback=function()
+aa:Notify{
+Title="💎 Premium Info",
+Content="Visit roblox.com/premium to learn more!",
+Duration=4
+}
+end
+}
+}
+}
+end
+}
+end
+end
+
+
+aq.Profile:Button{
+Title="loc:REFRESH_DATA",
+Icon="refresh-cw",
+Desc="Refresh your profile information",
+Callback=function()
+if al then
+local m=getPlayerInfo()
+aa:Notify{
+Title="Profile Refreshed",
+Content="Profile data updated for "..m.displayName,
+Duration=2
+}
+else
+aa:Notify{
+Title="Error",
+Content="Unable to refresh profile data",
+Duration=2
+}
+end
+end
+}
+
+
+aq.Profile:Button{
+Title="loc:SHOW_PROFILE",
+Icon="external-link",
+Desc="Display Roblox profile URL",
+Callback=function()
+if al then
+local m="https://www.roblox.com/users/"..al.UserId.."/profile"
+if setclipboard then
+setclipboard(m)
+aa:Notify{
+Title="Profile URL Copied",
+Content="Roblox profile URL copied to clipboard!",
+Duration=3
+}
+else
+aa:Notify{
+Title="Profile URL",
+Content=m,
+Duration=5
+}
+end
+else
+aa:Notify{
+Title="Error",
+Content="No player found",
+Duration=2
+}
+end
+end
+}
+
+aq.Profile:Divider()
+
+
+if al then
+aq.Profile:Section{
+Title="loc:PLAYER_STATS",
+TextSize=16,
+}
+
+
+local m=math.floor(al.AccountAge/365)
+local p=math.floor((al.AccountAge%365)/30)
+local r=al.AccountAge%30
+
+aq.Profile:Paragraph{
+Title="Detailed Account Age",
+Desc=string.format("Your account is %d years, %d months, and %d days old",
+m,p,r),
+Image="calendar",
+ImageSize=20,
+Color=Color3.fromHex"#2575FC",
+}
+
+
+aq.Profile:Paragraph{
+Title=al.MembershipType==Enum.MembershipType.Premium and"👑 Premium Membership"or"🎮 Free Membership",
+Desc=al.MembershipType==Enum.MembershipType.Premium and
+"🌟 Active Premium Subscription\n\n✅ Monthly Robux: Delivered\n✅ Premium Payouts: Enabled\n✅ Trading: Unlocked\n✅ Exclusive Items: Accessible\n✅ Priority Support: Available"or
+"💭 Free Roblox Experience\n\n💡 Premium Benefits Available:\n• 💰 Monthly Robux Stipend\n• 🎨 Exclusive Avatar Items\n• 📈 Enhanced Trading Features\n• 🛍️ Premium Game Payouts\n• ⭐ Priority Customer Support",
+Image=al.MembershipType==Enum.MembershipType.Premium and"crown"or"gift",
+ImageSize=24,
+Color=al.MembershipType==Enum.MembershipType.Premium and
+Color3.fromHex"#FFD700"or Color3.fromHex"#2575FC",
+}
+
+
+if al.MembershipType==Enum.MembershipType.Premium then
+aq.Profile:Paragraph{
+Title="🏆 Premium Status Verified",
+Desc="Your Premium membership is active and all benefits are unlocked!",
+Image="check-circle",
+ImageSize=20,
+Color=Color3.fromHex"#00FF7F",
+}
+end
+end
+
+
+
 af:Section{Title="WindUI "..aa.Version}
-am.Config:Paragraph{
+aq.Config:Paragraph{
 Title="Github Repository",
 Desc="github.com/Footagesus/WindUI",
 Image="github",
@@ -12657,10 +13127,10 @@ end
 af:OnClose(function()
 print"Window closed"
 
-if g and b then
-b:Set("playerData",d)
-b:Set("lastSave",os.date"%Y-%m-%d %H:%M:%S")
-b:Save()
+if j and f then
+f:Set("playerData",g)
+f:Set("lastSave",os.date"%Y-%m-%d %H:%M:%S")
+f:Save()
 print"Config auto-saved on close"
 end
 end)
@@ -12688,13 +13158,13 @@ task.wait(0.05)
 
 if af:GetUnlocked()and#af:GetUnlocked()>0 then
 print"Locked Elements in Window: "
-for h,j in next,af:GetUnlocked()do
-local l=j.Title
-if string.find(l,ae.Prefix)then
-local m=ae.Translations[aa.Creator.Language]or ae.Translations[ae.DefaultLanguage]
-l=m[l:gsub("^"..ae.Prefix,"")]
+for m,p in next,af:GetUnlocked()do
+local r=p.Title
+if string.find(r,ae.Prefix)then
+local u=ae.Translations[aa.Creator.Language]or ae.Translations[ae.DefaultLanguage]
+r=u[r:gsub("^"..ae.Prefix,"")]
 end
-print("- "..(l or"Unknown"))
+print("- "..(r or"Unknown"))
 end
 
 end

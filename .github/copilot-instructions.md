@@ -2,39 +2,40 @@
 
 ## Architecture Overview
 
-WindUI is a **Roblox UI Library** built in Luau for game script interfaces. The library follows a **modular component system** with centralized services and theme management.
+WindUI is a **Roblox UI Library** built in Luau for game script interfaces. The library follows a **modular component system** with centralized services, theme management, and automatic build processing.
 
 ### Key Components
-- **`src/Init.lua`**: Main entry point, bootstraps all modules and services
-- **`src/modules/Creator.lua`**: Core UI creation engine with theming, localization, and Roblox service wrappers
-- **`src/components/window/Init.lua`**: Main window management (1800+ lines - handles layout, dragging, resizing)
+- **`src/Init.lua`**: Main WindUI table initialization, exposes `CreateWindow()`, themes, and services (369 lines)
+- **`src/modules/Creator.lua`**: Core UI creation engine with theming, localization, and Roblox service wrappers (716 lines)
+- **`src/components/window/Init.lua`**: Main window management - handles layout, dragging, resizing
 - **`src/elements/`**: UI components (Button, Toggle, Slider, etc.) - each returns `{New = function(config)}`
-- **`src/themes/Init.lua`**: Color scheme system (Dark, Light, Rose, Plant themes)
-- **`src/config/Init.lua`**: Data persistence system with type-specific serializers
+- **`src/themes/Init.lua`**: Color scheme system (Dark, Light, Rose themes) with hex color definitions
+- **`src/config/Init.lua`**: Data persistence system with type-specific serializers (313 lines)
 
 ## Development Workflow
 
 ### Build System
 ```bash
-# Development build with hot reload
+# Development build with custom entry point
 npm run dev INPUT_FILE=main_example.lua
 
 # Production build (minified with darklua)
 npm run build
 
-# Live development with file watching
-npm run example-live-build
+# Live development with file watching + HTTP server
+npm run example-live-build  # Uses main_example.lua + port 8642
 ```
 
-**Key Build Files:**
-- `build/build.sh`: Bash script handling dev/production modes with darklua processing
+**Build Pipeline:**
+- `build/build.sh`: Bash script with dev/production modes, generates headers with version/date
 - `build/darklua.config.json`: Minification config (removes comments, renames variables, bundles requires)
-- `build/package.lua`: Auto-generated from package.json for version injection
+- `build/package.lua`: Auto-generated from package.json for metadata injection
+- `dist/main.lua`: Final output with header + bundled code
 
 ### Development Environment
-- **Aftman** for tool management (rojo, darklua, lune)
-- **darklua** for bundling and minification
-- Entry points: `main.lua` (production), `main_example.lua` (development)
+- **Aftman** for tool management: `rojo@7.3.0`, `darklua@0.17.1`, `lune@0.7.6`
+- **Node.js** for build orchestration with `chokidar-cli` for file watching
+- Entry points: `main.lua` (loadstring target), `main_example.lua` (development testing)
 
 ## Code Patterns
 
@@ -76,10 +77,10 @@ config.Flag = "uniqueIdentifier"  -- For config saving
 ## Critical Conventions
 
 1. **Theme Integration**: All components must use `Creator.Theme` colors, never hardcoded colors
-2. **Localization Support**: Text through `Creator.Localization:Get("key")` 
-3. **Icon System**: Uses Lucide icons via external CDN (`src/modules/Creator.lua:12`)
-4. **Scale Awareness**: All sizing must respect `UIScale` parameter
-5. **Event Cleanup**: Components must implement proper signal disconnection
+2. **Localization Support**: Text through `Creator.Localization:Get("key")` with auto-detection from `LocalizationService.SystemLocaleId`
+3. **Icon System**: Uses Lucide icons via external CDN - `Icons.SetIconsType("lucide")` in Creator.lua
+4. **Scale Awareness**: All sizing must respect `UIScale` parameter passed through component hierarchy
+5. **Event Cleanup**: Components must implement proper signal disconnection via `Creator.Signals` tracking
 
 ## File Organization
 
@@ -92,9 +93,9 @@ config.Flag = "uniqueIdentifier"  -- For config saving
 ## Integration Points
 
 - **External Icon CDN**: `https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua`
-- **HTTP Compatibility**: Supports both `game:HttpGetAsync()` and exploit HTTP functions
-- **Roblox Services**: Heavily integrates CoreGui, UserInputService, TweenService
-- **Config Persistence**: File-based config system with JSON serialization
+- **HTTP Compatibility**: Auto-detects `http_request`, `syn.request`, or `game:HttpGetAsync()` for cross-executor support
+- **Roblox Services**: Heavily integrates CoreGui, UserInputService, TweenService, LocalizationService
+- **Config Persistence**: JSON-based with type-specific parsers for complex UI state (Colorpicker hex values, Dropdown selections)
 
 ## Common Debugging
 

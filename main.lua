@@ -21,7 +21,36 @@ local Localization = WindUI:Localization({
             ["LOAD_CONFIG"] = "Load Configuration",
             ["THEME_SELECT"] = "Select Theme",
             ["TRANSPARENCY"] = "Window Transparency",
-            ["LOCKED_TAB"] = "Locked Tab"
+            ["LOCKED_TAB"] = "Locked Tab",
+            ["USER_PROFILE"] = "User Profile",
+            ["PROFILE_CLICKED"] = "Profile menu opened!",
+            ["PLAYER_ID"] = "Player ID",
+            ["USERNAME"] = "Username",
+            ["DISPLAY_NAME"] = "Display Name",
+            ["ACCOUNT_AGE"] = "Account Age",
+            ["PREMIUM_STATUS"] = "Premium Status",
+            ["ROBUX_BALANCE"] = "Robux Balance",
+            ["JOIN_DATE"] = "Join Date",
+            ["PROFILE_INFO"] = "Profile Information",
+            ["SHOW_PROFILE"] = "Show Roblox Profile",
+            ["COPY_USERID"] = "Copy User ID",
+            ["REFRESH_DATA"] = "Refresh Profile Data",
+            ["DAYS_OLD"] = "days old",
+            ["PREMIUM_USER"] = "Premium User",
+            ["NON_PREMIUM"] = "Non-Premium",
+            ["PROFILE_UPDATED"] = "Profile data updated!",
+            ["ERROR_LOADING"] = "Error loading profile data",
+            ["PROFILE_TAB"] = "Profile",
+            ["PROFILE_TOOLS"] = "Profile Tools",
+            ["CURRENT_PLAYER"] = "Current Player",
+            ["PLAYER_STATS"] = "Player Statistics",
+            ["ACCOUNT_INFO"] = "Account Information",
+            ["PREMIUM_BADGE"] = "👑 PREMIUM",
+            ["FREE_BADGE"] = "🎮 FREE",
+            ["PREMIUM_BENEFITS"] = "Premium Benefits",
+            ["UPGRADE_TO_PREMIUM"] = "Upgrade to Premium",
+            ["PREMIUM_PERKS"] = "✨ Monthly Robux\n🛍️ Premium Payouts\n🎨 Exclusive Items\n📈 Trading Access",
+            ["FREE_USER_INFO"] = "🎮 You're using Roblox for free!\n💡 Consider Premium for extra benefits."
         }
     }
 })
@@ -117,13 +146,125 @@ local Window = WindUI:CreateWindow({
     --Background = "https://footagesus.github.io/WindUI-Docs/banners/thumbnail2.jpg",
     User = {
         Enabled = true,
-        Anonymous = true,
+        Anonymous = false,
+        Premium = {
+            Enabled = true,
+            ShowBadge = true,
+            PremiumIcon = "crown",
+            FreeIcon = "gamepad-2"
+        },
         Callback = function()
-            WindUI:Notify({
-                Title = "User Profile",
-                Content = "User profile clicked!",
-                Duration = 3
-            })
+            -- Get current player info
+            local cloneref = (cloneref or clonereference or function(instance) return instance end)
+            local Players = cloneref(game:GetService("Players"))
+            local LocalPlayer = Players.LocalPlayer
+            
+            if LocalPlayer then
+                -- Check premium status
+                local isPremium = LocalPlayer.MembershipType == Enum.MembershipType.Premium
+                local statusBadge = isPremium and "👑 PREMIUM" or "🎮 FREE"
+                
+                -- Use component-based popup from src/components
+                local PopupComponent = require(WindUI.Creator.Root .. "/src/components/popup/Init")
+                
+                -- Create enhanced profile popup with proper close functionality
+                PopupComponent.new({
+                    Title = "loc:USER_PROFILE " .. statusBadge,
+                    Icon = isPremium and "crown" or "user",
+                    IconThemed = true,
+                    WindUI = WindUI,
+                    Content = string.format([[
+<b>🎮 Profile Information</b>
+
+<b>👤 Username:</b> %s
+<b>✨ Display Name:</b> %s  
+<b>🆔 Player ID:</b> %d
+<b>📅 Account Age:</b> %d days old
+<b>💎 Premium Status:</b> %s
+
+%s
+
+<i>Use the buttons below for quick actions or close this dialog.</i>
+                    ]], 
+                        LocalPlayer.Name,
+                        LocalPlayer.DisplayName,
+                        LocalPlayer.UserId,
+                        LocalPlayer.AccountAge,
+                        LocalPlayer.MembershipType == Enum.MembershipType.Premium and "👑 PREMIUM MEMBER" or "🎮 FREE USER",
+                        LocalPlayer.MembershipType == Enum.MembershipType.Premium and "✨ Enjoying all Premium benefits!" or "💡 Consider upgrading to Premium for exclusive features!"
+                    ),
+                    Buttons = {
+                        {
+                            Title = "View Profile",
+                            Icon = "external-link",
+                            Variant = "Primary",
+                            Callback = function()
+                                -- Open Roblox profile (if supported by executor)
+                                local profileUrl = "https://www.roblox.com/users/" .. LocalPlayer.UserId .. "/profile"
+                                if setclipboard then
+                                    setclipboard(profileUrl)
+                                    WindUI:Notify({
+                                        Title = "Profile URL Copied",
+                                        Content = "Roblox profile URL copied to clipboard!",
+                                        Duration = 3
+                                    })
+                                else
+                                    WindUI:Notify({
+                                        Title = "Profile Info", 
+                                        Content = "Player ID: " .. LocalPlayer.UserId,
+                                        Duration = 3
+                                    })
+                                end
+                            end
+                        },
+                        {
+                            Title = "Copy User ID",
+                            Icon = "copy",
+                            Callback = function()
+                                if setclipboard then
+                                    setclipboard(tostring(LocalPlayer.UserId))
+                                    WindUI:Notify({
+                                        Title = "Copied!",
+                                        Content = "User ID copied: " .. LocalPlayer.UserId,
+                                        Duration = 2
+                                    })
+                                else
+                                    WindUI:Notify({
+                                        Title = "Player ID",
+                                        Content = tostring(LocalPlayer.UserId),
+                                        Duration = 3
+                                    })
+                                end
+                            end
+                        },
+                        {
+                            Title = "Refresh",
+                            Icon = "refresh-cw",
+                            Callback = function()
+                                WindUI:Notify({
+                                    Title = "Profile Updated",
+                                    Content = "Data refreshed for " .. LocalPlayer.DisplayName,
+                                    Duration = 2
+                                })
+                            end
+                        },
+                        {
+                            Title = "Close",
+                            Icon = "x",
+                            Variant = "Tertiary",
+                            Callback = function()
+                                -- Close functionality handled by Dialog component
+                            end
+                        }
+                    }
+                })
+            else
+                WindUI:Notify({
+                    Title = "Error",
+                    Content = "Unable to get player information",
+                    Duration = 3
+                })
+            end
         end
     },
     Acrylic = false,
@@ -198,8 +339,21 @@ local Window = WindUI:CreateWindow({
 -- OPTIONAL   >:(
 
 
-Window.User:SetAnonymous(true)
---Window.User:Disable()
+-- Configure user profile display
+local cloneref = (cloneref or clonereference or function(instance) return instance end)
+local Players = cloneref(game:GetService("Players"))
+local LocalPlayer = Players.LocalPlayer
+
+if LocalPlayer then
+    -- Show actual player info instead of anonymous
+    Window.User:SetAnonymous(false)
+    -- The user profile will show the actual Roblox username and avatar
+else
+    -- Fallback to anonymous if no player found
+    Window.User:SetAnonymous(true)
+end
+
+--Window.User:Disable() -- Uncomment to disable user profile entirely
 
 
 
@@ -263,212 +417,225 @@ local Sections = {
 }
 
 local Tabs = {
-    Elements = Sections.Main:Tab({ Title = "loc:UI_ELEMENTS", Icon = "layout-grid", Desc = "UI Elements Example" }),
+    FishIt = Sections.Main:Tab({ Title = "🎣 Fish-It", Icon = "fish", Desc = "Fish-It Game Features" }),
     Appearance = Sections.Settings:Tab({ Title = "loc:APPEARANCE", Icon = "brush" }),
     Config = Sections.Utilities:Tab({ Title = "loc:CONFIGURATION", Icon = "settings" }),
-    LockedTab1 = Window:Tab({ Title = "loc:LOCKED_TAB", Icon = "bird", Locked = true, }),
-    LockedTab2 = Window:Tab({ Title = "loc:LOCKED_TAB", Icon = "bird", Locked = true, }),
-    LockedTab3 = Window:Tab({ Title = "loc:LOCKED_TAB", Icon = "bird", Locked = true, }),
-    LockedTab4 = Window:Tab({ Title = "loc:LOCKED_TAB", Icon = "bird", Locked = true, }),
-    LockedTab5 = Window:Tab({ Title = "loc:LOCKED_TAB", Icon = "bird", Locked = true, }),
+    Profile = Sections.Utilities:Tab({ Title = "loc:PROFILE_TAB", Icon = "user", Desc = "Roblox Profile Information" }),
 }
 
--- Tabs.Elements:Paragraph({
---     Title = "Interactive Components",
---     Desc = "Explore WindUI's powerful elements",
---     Image = "component",
---     ImageSize = 20,
---     Color = Color3.fromHex("#30ff6a"),
--- })
-
-Tabs.Elements:Section({
-    Title = "Interactive Components",
-    TextSize = 20,
+-- 🎣 Fish-It Game Features
+Tabs.FishIt:Paragraph({
+    Title = "🎣 Fish-It Auto Features",
+    Desc = "Automated fishing tools for Fish-It game",
+    Image = "fish",
+    ImageSize = 24,
+    Color = Color3.fromHex("#00BFFF"),
 })
 
-Tabs.Elements:Section({
-    Title = "Explore WindUI's powerful elements",
-    TextSize = 16,
-    TextTransparency = .25,
-})
+Tabs.FishIt:Divider()
 
-
-Tabs.Elements:Divider()
-
-local ElementsSection = Tabs.Elements:Section({
-    Title = "Section Example",
-    Icon = "bird", -- optional
-    TextXAlignment = "Center",
+-- Auto Fishing Section
+local AutoFishingSection = Tabs.FishIt:Section({
+    Title = "🎣 Auto Fishing",
+    Icon = "fish",
+    TextXAlignment = "Left",
     Opened = true,
     Box = true,
 })
 
-Tabs.Elements:Section({
-    Title = "Section Example 2",
-    --Icon = "bird", -- optional
-    TextXAlignment = "Center",
+-- Auto Sell Section
+local AutoSellSection = Tabs.FishIt:Section({
+    Title = "💰 Auto Sell",
+    Icon = "dollar-sign",
+    TextXAlignment = "Left", 
     Opened = true,
     Box = true,
 })
 
-Tabs.Elements:Section({
-    Title = "Section Example 2",
-    --Icon = "bird", -- optional
-    TextXAlignment = "Center",
+-- Quality of Life Section  
+local QoLSection = Tabs.FishIt:Section({
+    Title = "⚡ Quality of Life",
+    Icon = "zap",
+    TextXAlignment = "Left",
     Opened = true,
-    --Box = true,
+    Box = true,
 })
 
-local toggleState = false
-local featureToggle = ElementsSection:Toggle({
-    Title = "Enable Features",
-    --Desc = "Unlocks additional functionality",
-    Flag = "featureToggle",
+-- Auto Fishing Features
+local autoFishEnabled = false
+local AutoFishToggle = AutoFishingSection:Toggle({
+    Title = "Auto Fishing",
+    Desc = "Automatically catch fish when they bite",
+    Flag = "autoFishing",
     Value = false,
     Callback = function(state) 
-        toggleState = state
+        autoFishEnabled = state
         WindUI:Notify({
-            Title = "Features",
-            Content = state and "Features Enabled" or "Features Disabled",
-            Icon = state and "check" or "x",
+            Title = "🎣 Auto Fishing",
+            Content = state and "Auto Fishing Enabled!" or "Auto Fishing Disabled",
+            Icon = state and "fish" or "x",
+            Duration = 2
+        })
+        
+        if state then
+            -- Start auto fishing logic here
+            print("Starting auto fishing...")
+        else
+            -- Stop auto fishing logic here
+            print("Stopping auto fishing...")
+        end
+    end
+})
+
+local fishingSpeedSlider = AutoFishingSection:Slider({
+    Title = "Fishing Speed",
+    Desc = "Adjust how fast to cast and reel",
+    Flag = "fishingSpeed",
+    Value = { Min = 1, Max = 10, Default = 5 },
+    Callback = function(value)
+        print("Fishing speed set to:", value)
+        WindUI:Notify({
+            Title = "🎣 Speed Adjusted",
+            Content = "Fishing speed: " .. value .. "/10",
+            Duration = 1
+        })
+    end
+})
+
+local reactionTimeSlider = AutoFishingSection:Slider({
+    Title = "Reaction Time (ms)",
+    Desc = "Delay before hooking fish (lower = faster)",
+    Flag = "reactionTime",
+    Value = { Min = 50, Max = 1000, Default = 200 },
+    Callback = function(value)
+        print("Reaction time set to:", value .. "ms")
+    end
+})
+
+AutoFishingSection:Button({
+    Title = "Start Auto Fishing",
+    Icon = "play",
+    Desc = "Begin automated fishing process",
+    Callback = function()
+        if not autoFishEnabled then
+            AutoFishToggle:Set(true)
+        end
+        WindUI:Notify({
+            Title = "🎣 Auto Fishing",
+            Content = "Starting automated fishing session!",
+            Icon = "fish",
             Duration = 2
         })
     end
 })
 
-local intensitySlider = ElementsSection:Slider({
-    Title = "Effect Intensity",
-    Desc = "Adjust the effect strength",
-    Flag = "intensitySlider",
-    Value = { Min = 0, Max = 100, Default = 50 },
+-- Auto Sell Features
+local autoSellEnabled = false
+local AutoSellToggle = AutoSellSection:Toggle({
+    Title = "Auto Sell Fish",
+    Desc = "Automatically sell caught fish",
+    Flag = "autoSell",
+    Value = false,
+    Callback = function(state)
+        autoSellEnabled = state
+        WindUI:Notify({
+            Title = "💰 Auto Sell",
+            Content = state and "Auto Sell Enabled!" or "Auto Sell Disabled",
+            Icon = state and "dollar-sign" or "x",
+            Duration = 2
+        })
+    end
+})
+
+local sellPriceFilter = AutoSellSection:Slider({
+    Title = "Minimum Sell Price",
+    Desc = "Only sell fish worth more than this amount",
+    Flag = "minSellPrice",
+    Value = { Min = 0, Max = 10000, Default = 100 },
     Callback = function(value)
-        print("Intensity set to:", value)
+        print("Minimum sell price:", value)
     end
 })
 
-intensitySlider:SetMin(20)
-intensitySlider:SetMax(200)
-intensitySlider:Set(100)
+-- Fish Selection
+local fishTypes = {
+    {Title = "All Fish", Icon = "fish"},
+    {Title = "Common Fish", Icon = "fish"},
+    {Title = "Rare Fish", Icon = "star"},
+    {Title = "Epic Fish", Icon = "crown"},
+    {Title = "Legendary Fish", Icon = "diamond"},
+}
 
-
-local values = {}
-local values2 = {}
-
--- random lucide icons
-local icons = WindUI.Creator.Icons.Icons.lucide.Icons -- getting all lucide icons
-local iconNames = {}
-
-for name, _ in next, icons do
-    table.insert(iconNames, name)
-end
-
-for i = 1, 80 do
-    local randomIcon = iconNames[math.random(1, #iconNames)]
-    table.insert(values, {Title = "Test " .. i, Icon = randomIcon})
-end
-
-for i = 1, 2 do
-    table.insert(values2, "Test " .. i)
-end
-
-ElementsSection:Space()
-
-
-local testDropdown = ElementsSection:Dropdown({
-    Title = "Dropdown test",
-    Values = values,
-    Flag = "testDropdown",
-    SearchBarEnabled = true,
-    Value = "Test 1",
+local fishTypeDropdown = AutoSellSection:Dropdown({
+    Title = "Fish Types to Sell",
+    Flag = "fishTypesToSell",
+    Values = fishTypes,
+    Value = "All Fish",
     Callback = function(option)
-        -- WindUI:Notify({
-        --     Title = "Dropdown",
-        --     Content = "Selected: "..option,
-        --     Duration = 2
-        -- })
+        WindUI:Notify({
+            Title = "🐟 Fish Filter",
+            Content = "Will sell: " .. option.Title,
+            Duration = 2
+        })
     end
 })
 
-local testDropdown2 = ElementsSection:Dropdown({
-    Title = "Dropdown test 2",
-    Flag = "testDropdown2", 
-    Values = {
-        {
-            Title = "Test 1",
-            Icon = "bird",
-        },
-        {
-            Title = "Test 2",
-            Icon = "house",
-        },
-        {
-            Title = "Test 3",
-            Icon = "droplet",
-        },
-        {
-            Title = "Test 4",
-            Icon = "user",
-        },
-    },
-    SearchBarEnabled = true,
-    Value = "Test 1",
-    Callback = function(option)
-        print("Selected: " .. option.Title .. " with icon: " .. option.Icon)
-    end
-})
-
-local testDropdown3 = ElementsSection:Dropdown({
-    Title = "Dropdown test 3",
-    Flag = "testDropdown3", 
-    Values = values,
-    SearchBarEnabled = true,
-    Value = "Test 1",
-    Callback = function(option)
-        -- WindUI:Notify({
-        --     Title = "Dropdown",
-        --     Content = "Selected: "..option,
-        --     Duration = 2
-        -- })
-    end
-})
-
---testDropdown:Refresh(values)
-testDropdown3:Refresh(values2)
-
-ElementsSection:Divider()
-
-ElementsSection:Button({
-    Title = "Show Notification",
-    Icon = "bell",
+AutoSellSection:Button({
+    Title = "Sell All Fish Now",
+    Icon = "dollar-sign",
+    Desc = "Immediately sell all fish in inventory",
     Callback = function()
         WindUI:Notify({
-            Title = "Hello WindUI!",
-            Content = "This is a sample notification",
-            Icon = "bell",
+            Title = "💰 Selling Fish",
+            Content = "Selling all fish in inventory...",
+            Icon = "dollar-sign",
             Duration = 3
         })
+        -- Add sell all fish logic here
     end
 })
 
-ElementsSection:Colorpicker({
-    Title = "Select Color",
-    --Desc = "Select coloe",
-    Default = Color3.fromHex("#30ff6a"),
-    Transparency = 0, -- enable transparency
-    Callback = function(color, transparency)
+-- Quality of Life Features
+local autoEquipBestRod = QoLSection:Toggle({
+    Title = "Auto Equip Best Rod",
+    Desc = "Automatically equip the best fishing rod",
+    Flag = "autoEquipBestRod", 
+    Value = false,
+    Callback = function(state)
         WindUI:Notify({
-            Title = "Color Changed",
-            Content = "New color: "..color:ToHex().."\nTransparency: "..transparency,
+            Title = "🎣 Auto Equip",
+            Content = state and "Will auto-equip best rod!" or "Auto-equip disabled",
             Duration = 2
         })
     end
 })
 
-ElementsSection:Code({
-    Title = "my_code.luau",
-    Code = [[print("Hello world!")]],
-    OnCopy = function()
-        print("Copied to clipboard!")
+local infiniteStamina = QoLSection:Toggle({
+    Title = "Infinite Stamina",
+    Desc = "Never run out of stamina while fishing",
+    Flag = "infiniteStamina",
+    Value = false,
+    Callback = function(state)
+        WindUI:Notify({
+            Title = "⚡ Infinite Stamina",
+            Content = state and "Infinite stamina enabled!" or "Normal stamina restored",
+            Duration = 2
+        })
+    end
+})
+
+QoLSection:Button({
+    Title = "Teleport to Best Spot",
+    Icon = "map-pin",
+    Desc = "Teleport to the best fishing location",
+    Callback = function()
+        WindUI:Notify({
+            Title = "🗺️ Teleporting",
+            Content = "Moving to best fishing spot...",
+            Icon = "map-pin", 
+            Duration = 2
+        })
+        -- Add teleport logic here
     end
 })
 
@@ -698,6 +865,309 @@ else
     })
 end
 
+
+-- ==================== PROFILE TAB CONTENT ====================
+
+-- Profile Tab: Current Player Information
+Tabs.Profile:Section({
+    Title = "loc:CURRENT_PLAYER",
+    TextSize = 18,
+})
+
+-- Get player information
+local function getPlayerInfo()
+    if LocalPlayer then
+        return {
+            name = LocalPlayer.Name,
+            displayName = LocalPlayer.DisplayName,
+            userId = LocalPlayer.UserId,
+            accountAge = LocalPlayer.AccountAge,
+            isPremium = LocalPlayer.MembershipType == Enum.MembershipType.Premium,
+        }
+    else
+        return {
+            name = "Unknown",
+            displayName = "Unknown",
+            userId = 0,
+            accountAge = 0,
+            isPremium = false,
+        }
+    end
+end
+
+local playerInfo = getPlayerInfo()
+
+-- Display current player information with premium badge
+Tabs.Profile:Paragraph({
+    Title = playerInfo.isPremium and "👑 PREMIUM ACCOUNT" or "🎮 FREE ACCOUNT",
+    Desc = string.format([[
+<b>👤 Username:</b> %s
+<b>✨ Display Name:</b> %s  
+<b>🆔 User ID:</b> %d
+<b>📅 Account Age:</b> %d days
+<b>💎 Status:</b> %s
+    ]], 
+        playerInfo.name,
+        playerInfo.displayName, 
+        playerInfo.userId,
+        playerInfo.accountAge,
+        playerInfo.isPremium and "👑 Premium Member" or "🎮 Free User"
+    ),
+    Image = playerInfo.isPremium and "crown" or "user",
+    ImageSize = 24,
+    Color = playerInfo.isPremium and Color3.fromHex("#FFD700") or Color3.fromHex("#30ff6a"),
+})
+
+-- Premium status indicator
+if playerInfo.isPremium then
+    Tabs.Profile:Paragraph({
+        Title = "👑 Premium Benefits Active",
+        Desc = "✨ Monthly Robux Allowance\n🛍️ Premium Payouts in Games\n🎨 Access to Premium-Only Items\n📈 Trading System Access\n🎭 Avatar Shop Discounts",
+        Image = "star",
+        ImageSize = 20,
+        Color = Color3.fromHex("#FFD700"),
+    })
+else
+    Tabs.Profile:Paragraph({
+        Title = "💡 Upgrade to Premium",
+        Desc = "🎮 You're currently using Roblox for free!\n\n💎 Premium gives you:\n• Monthly Robux\n• Premium Payouts\n• Exclusive Items\n• Trading Access\n• And much more!",
+        Image = "gift",
+        ImageSize = 20,
+        Color = Color3.fromHex("#666666"),
+    })
+end
+
+Tabs.Profile:Divider()
+
+-- Profile action buttons
+Tabs.Profile:Section({
+    Title = "loc:PROFILE_TOOLS",
+    TextSize = 16,
+})
+
+-- Copy User ID button
+Tabs.Profile:Button({
+    Title = "📋 " .. "loc:COPY_USERID",
+    Icon = "copy",
+    Desc = "Copy your Roblox User ID to clipboard",
+    Callback = function()
+        if setclipboard and LocalPlayer then
+            setclipboard(tostring(LocalPlayer.UserId))
+            WindUI:Notify({
+                Title = "✅ User ID Copied",
+                Content = "🆔 User ID " .. LocalPlayer.UserId .. " copied to clipboard!",
+                Duration = 3
+            })
+        else
+            WindUI:Notify({
+                Title = "🆔 User ID",
+                Content = LocalPlayer and tostring(LocalPlayer.UserId) or "❌ No player found",
+                Duration = 3
+            })
+        end
+    end
+})
+
+-- Premium membership button (dynamic based on status)
+if LocalPlayer then
+    if LocalPlayer.MembershipType == Enum.MembershipType.Premium then
+        Tabs.Profile:Button({
+            Title = "👑 Premium Status",
+            Icon = "crown",
+            Desc = "View your Premium membership benefits",
+            Callback = function()
+                WindUI:Popup({
+                    Title = "👑 Premium Membership",
+                    Icon = "crown",
+                    Content = [[
+<b>🌟 Your Premium Benefits</b>
+
+✅ <b>Monthly Robux Stipend</b>
+   Receive Robux monthly based on your membership
+
+✅ <b>Premium Payouts</b> 
+   Earn more from games you play
+
+✅ <b>Exclusive Avatar Shop</b>
+   Access Premium-only items and discounts
+
+✅ <b>Trading System</b>
+   Trade Limited items with other users
+
+✅ <b>Priority Support</b>
+   Get faster help when you need it
+
+<b>Thank you for supporting Roblox!</b>
+                    ]],
+                    Buttons = {
+                        {
+                            Title = "🎁 Claim Monthly Robux",
+                            Icon = "gift",
+                            Variant = "Primary",
+                            Callback = function()
+                                WindUI:Notify({
+                                    Title = "🎁 Premium Robux",
+                                    Content = "Visit Roblox.com to claim your monthly Robux!",
+                                    Duration = 4
+                                })
+                            end
+                        }
+                    }
+                })
+            end
+        })
+    else
+        Tabs.Profile:Button({
+            Title = "⭐ Get Premium",
+            Icon = "star",
+            Desc = "Learn about Roblox Premium benefits",
+            Callback = function()
+                WindUI:Popup({
+                    Title = "⭐ Roblox Premium",
+                    Icon = "star", 
+                    Content = [[
+<b>🎮 Why Upgrade to Premium?</b>
+
+💰 <b>Monthly Robux</b>
+   Get Robux every month to spend on games and items
+
+🏆 <b>Premium Payouts</b>
+   Earn more Robux from games you play
+
+🛍️ <b>Exclusive Items</b>
+   Access special avatar items and discounts
+
+📈 <b>Trading</b>
+   Trade Limited items with other players
+
+⚡ <b>Priority Support</b>
+   Get faster customer service
+
+<b>Ready to upgrade your Roblox experience?</b>
+                    ]],
+                    Buttons = {
+                        {
+                            Title = "💎 Learn More",
+                            Icon = "external-link",
+                            Variant = "Primary",
+                            Callback = function() 
+                                WindUI:Notify({
+                                    Title = "💎 Premium Info",
+                                    Content = "Visit roblox.com/premium to learn more!",
+                                    Duration = 4
+                                })
+                            end
+                        }
+                    }
+                })
+            end
+        })
+    end
+end
+
+-- Refresh profile data button
+Tabs.Profile:Button({
+    Title = "loc:REFRESH_DATA", 
+    Icon = "refresh-cw",
+    Desc = "Refresh your profile information",
+    Callback = function()
+        if LocalPlayer then
+            local newPlayerInfo = getPlayerInfo()
+            WindUI:Notify({
+                Title = "Profile Refreshed",
+                Content = "Profile data updated for " .. newPlayerInfo.displayName,
+                Duration = 2
+            })
+        else
+            WindUI:Notify({
+                Title = "Error",
+                Content = "Unable to refresh profile data",
+                Duration = 2
+            })
+        end
+    end
+})
+
+-- Profile URL button (if supported)
+Tabs.Profile:Button({
+    Title = "loc:SHOW_PROFILE",
+    Icon = "external-link", 
+    Desc = "Display Roblox profile URL",
+    Callback = function()
+        if LocalPlayer then
+            local profileUrl = "https://www.roblox.com/users/" .. LocalPlayer.UserId .. "/profile"
+            if setclipboard then
+                setclipboard(profileUrl)
+                WindUI:Notify({
+                    Title = "Profile URL Copied",
+                    Content = "Roblox profile URL copied to clipboard!",
+                    Duration = 3
+                })
+            else
+                WindUI:Notify({
+                    Title = "Profile URL",
+                    Content = profileUrl,
+                    Duration = 5
+                })
+            end
+        else
+            WindUI:Notify({
+                Title = "Error",
+                Content = "No player found",
+                Duration = 2
+            })
+        end
+    end
+})
+
+Tabs.Profile:Divider()
+
+-- Player statistics section
+if LocalPlayer then
+    Tabs.Profile:Section({
+        Title = "loc:PLAYER_STATS",
+        TextSize = 16,
+    })
+    
+    -- Account age in different formats
+    local accountAgeYears = math.floor(LocalPlayer.AccountAge / 365)
+    local accountAgeMonths = math.floor((LocalPlayer.AccountAge % 365) / 30)
+    local accountAgeDays = LocalPlayer.AccountAge % 30
+    
+    Tabs.Profile:Paragraph({
+        Title = "Detailed Account Age",
+        Desc = string.format("Your account is %d years, %d months, and %d days old", 
+            accountAgeYears, accountAgeMonths, accountAgeDays),
+        Image = "calendar",
+        ImageSize = 20,
+        Color = Color3.fromHex("#2575FC"),
+    })
+    
+    -- Premium status details with enhanced visuals
+    Tabs.Profile:Paragraph({
+        Title = LocalPlayer.MembershipType == Enum.MembershipType.Premium and "👑 Premium Membership" or "🎮 Free Membership",
+        Desc = LocalPlayer.MembershipType == Enum.MembershipType.Premium and 
+            "🌟 Active Premium Subscription\n\n✅ Monthly Robux: Delivered\n✅ Premium Payouts: Enabled\n✅ Trading: Unlocked\n✅ Exclusive Items: Accessible\n✅ Priority Support: Available" or 
+            "💭 Free Roblox Experience\n\n💡 Premium Benefits Available:\n• 💰 Monthly Robux Stipend\n• 🎨 Exclusive Avatar Items\n• 📈 Enhanced Trading Features\n• 🛍️ Premium Game Payouts\n• ⭐ Priority Customer Support",
+        Image = LocalPlayer.MembershipType == Enum.MembershipType.Premium and "crown" or "gift",
+        ImageSize = 24,
+        Color = LocalPlayer.MembershipType == Enum.MembershipType.Premium and 
+            Color3.fromHex("#FFD700") or Color3.fromHex("#2575FC"),
+    })
+    
+    -- Add premium badge/indicator
+    if LocalPlayer.MembershipType == Enum.MembershipType.Premium then
+        Tabs.Profile:Paragraph({
+            Title = "🏆 Premium Status Verified",
+            Desc = "Your Premium membership is active and all benefits are unlocked!",
+            Image = "check-circle",
+            ImageSize = 20,
+            Color = Color3.fromHex("#00FF7F"),
+        })
+    end
+end
+
+-- ==================== END PROFILE TAB CONTENT ====================
 
 local footerSection = Window:Section({ Title = "WindUI " .. WindUI.Version })
 Tabs.Config:Paragraph({
