@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Ensure cargo and aftman tools are in PATH
+export PATH="$HOME/.cargo/bin:$HOME/.aftman/bin:$PATH"
+
 MODE=${1:-"build"}
 
 P='\033[38;2;48;255;106m'

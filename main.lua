@@ -8,8 +8,8 @@ local Localization = WindUI:Localization({
     DefaultLanguage = "en",
     Translations = {
         ["en"] = {
-            ["WINDUI_EXAMPLE"] = "WindUI Example",
-            ["WELCOME"] = "Welcome to WindUI!",
+            ["SKUYY_HUB"] = "SkuyyHub",
+            ["WELCOME"] = "Welcome to SkuyyHub!",
             ["LIB_DESC"] = "Beautiful UI library for Roblox",
             ["SETTINGS"] = "Settings",
             ["APPEARANCE"] = "Appearance",
@@ -97,7 +97,7 @@ WindUI.Services.mysuperservicetogetkey = {
 
 
 local Window = WindUI:CreateWindow({
-    Title = "loc:WINDUI_EXAMPLE",
+    Title = "loc:SKUYY_HUB",
     Icon = "geist:window",
     Author = "loc:WELCOME",
     Folder = "WindUI_Example",
