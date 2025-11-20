@@ -423,6 +423,52 @@ local Tabs = {
     Profile = Sections.Utilities:Tab({ Title = "loc:PROFILE_TAB", Icon = "user", Desc = "Roblox Profile Information" }),
 }
 
+-- Get current game information
+local function getCurrentGameInfo()
+    local gameInfo = {
+        name = "Unknown Game",
+        placeId = game.PlaceId,
+        jobId = game.JobId,
+        creator = "Unknown",
+        players = #game.Players:GetPlayers(),
+        maxPlayers = game.Players.MaxPlayers,
+        gameId = game.GameId
+    }
+    
+    -- Try to get game name from MarketplaceService
+    pcall(function()
+        local MarketplaceService = game:GetService("MarketplaceService")
+        local productInfo = MarketplaceService:GetProductInfo(game.PlaceId)
+        gameInfo.name = productInfo.Name or "Unknown Game"
+        gameInfo.creator = productInfo.Creator.Name or "Unknown"
+    end)
+    
+    return gameInfo
+end
+
+-- Detect if current game is Fish-It
+local function isFishItGame()
+    -- Check exact Place ID for Fish It! game
+    local FISH_IT_PLACE_ID = 121864768012064
+    
+    if game.PlaceId == FISH_IT_PLACE_ID then
+        return true
+    end
+    
+    -- Fallback: Check game name and keywords
+    local gameInfo = getCurrentGameInfo()
+    local fishItKeywords = {"fish it!", "fish-it", "fishit", "fishing", "catch", "rod", "lake", "pond"}
+    
+    for _, keyword in pairs(fishItKeywords) do
+        if string.find(string.lower(gameInfo.name), string.lower(keyword)) then
+            return true
+        end
+    end
+    
+    -- Additional detection through game objects
+    return detectFishItGame()
+end
+
 -- 🎣 Fish-It Game Features
 Tabs.FishIt:Paragraph({
     Title = "🎣 Fish-It Auto Features",
@@ -430,6 +476,59 @@ Tabs.FishIt:Paragraph({
     Image = "fish",
     ImageSize = 24,
     Color = Color3.fromHex("#00BFFF"),
+})
+
+-- Current Game Info
+local gameInfo = getCurrentGameInfo()
+local gameStatusColor = isFishItGame() and Color3.fromHex("#00FF7F") or Color3.fromHex("#FFB347")
+local gameStatusIcon = isFishItGame() and "check-circle" or "alert-triangle"
+local gameStatusText = isFishItGame() and "✅ Fish-It Compatible" or "⚠️ Game Compatibility Unknown"
+
+Tabs.FishIt:Paragraph({
+    Title = "🎮 Current Game Info",
+    Desc = string.format([[
+<b>Game:</b> %s
+<b>Creator:</b> %s
+<b>Players:</b> %d/%d
+<b>Place ID:</b> %d
+<b>Status:</b> %s
+
+%s
+    ]], 
+        gameInfo.name,
+        gameInfo.creator,
+        gameInfo.players,
+        gameInfo.maxPlayers,
+        gameInfo.placeId,
+        gameStatusText,
+        isFishItGame() and "🎣 Auto fishing features should work!" or "💡 Features may not work in this game"
+    ),
+    Image = gameStatusIcon,
+    ImageSize = 20,
+    Color = gameStatusColor,
+})
+
+-- Add refresh game info button
+Tabs.FishIt:Button({
+    Title = "Refresh Game Info",
+    Icon = "refresh-cw",
+    Desc = "Update current game information",
+    Callback = function()
+        local newGameInfo = getCurrentGameInfo()
+        local newCompatibility = isFishItGame()
+        
+        WindUI:Notify({
+            Title = "🎮 Game Info Updated",
+            Content = string.format("Game: %s\nStatus: %s", 
+                newGameInfo.name, 
+                newCompatibility and "Compatible" or "Unknown"
+            ),
+            Icon = "refresh-cw",
+            Duration = 3
+        })
+        
+        -- You could update the paragraph here if WindUI supports dynamic updates
+    end
 })
 
 Tabs.FishIt:Divider()
@@ -480,7 +579,7 @@ local fishingSpeed = 5
 local reactionTime = 200
 local isCurrentlyFishing = false
 
--- Auto Fishing Function
+-- Auto Fishing Function for Fish It! (Place ID: 121864768012064)
 local function startAutoFishing()
     if autoFishConnection then
         autoFishConnection:Disconnect()
@@ -490,33 +589,81 @@ local function startAutoFishing()
         if not autoFishEnabled then return end
         
         pcall(function()
-            -- Check if Fish-It game is loaded
+            -- Verify we're in Fish It! game
+            if game.PlaceId ~= 121864768012064 then
+                WindUI:Notify({
+                    Title = "❌ Wrong Game",
+                    Content = "Please join Fish It! game first!",
+                    Duration = 3
+                })
+                autoFishEnabled = false
+                AutoFishToggle:Set(false)
+                return
+            end
+            
             local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
             if not playerGui then return end
             
-            local fishingGui = playerGui:FindFirstChild("FishingGui") or playerGui:FindFirstChild("Fishing")
-            if not fishingGui then return end
+            -- Look for Fish It! specific GUI elements
+            local mainGui = playerGui:FindFirstChild("ScreenGui") or 
+                           playerGui:FindFirstChild("MainGui") or
+                           playerGui:FindFirstChild("Interface")
             
-            -- Look for fishing button or cast button
-            local castButton = fishingGui:FindFirstChildOfClass("TextButton", true) or
-                              fishingGui:FindFirstChild("Cast", true) or
-                              fishingGui:FindFirstChild("CastButton", true)
+            if not mainGui then return end
             
-            if castButton and castButton.Visible and not isCurrentlyFishing then
+            -- Look for fishing-related buttons in Fish It!
+            local castButton = mainGui:FindFirstChild("Cast", true) or
+                              mainGui:FindFirstChild("CastButton", true) or
+                              mainGui:FindFirstChild("Fish", true) or
+                              mainGui:FindFirstChildOfClass("TextButton", true)
+            
+            if castButton and castButton.Visible and castButton.Text and 
+               (string.find(string.lower(castButton.Text), "cast") or 
+                string.find(string.lower(castButton.Text), "fish") or
+                string.find(string.lower(castButton.Text), "throw")) and 
+               not isCurrentlyFishing then
+                
                 -- Click cast button
                 isCurrentlyFishing = true
-                castButton.Activated:Fire()
                 
-                -- Wait for fish bite (simulate reaction time)
+                -- Use different click methods for Fish It!
+                local success = pcall(function()
+                    if castButton.MouseButton1Click then
+                        castButton.MouseButton1Click:Fire()
+                    elseif castButton.Activated then
+                        castButton.Activated:Fire()
+                    else
+                        -- Simulate mouse click
+                        local VirtualInputManager = game:GetService("VirtualInputManager")
+                        VirtualInputManager:SendMouseButtonEvent(
+                            castButton.AbsolutePosition.X + castButton.AbsoluteSize.X/2,
+                            castButton.AbsolutePosition.Y + castButton.AbsoluteSize.Y/2,
+                            0, true, castButton, 1
+                        )
+                        VirtualInputManager:SendMouseButtonEvent(
+                            castButton.AbsolutePosition.X + castButton.AbsoluteSize.X/2,
+                            castButton.AbsolutePosition.Y + castButton.AbsoluteSize.Y/2,
+                            0, false, castButton, 1
+                        )
+                    end
+                end)
+                
+                -- Wait for fish bite
                 task.wait(reactionTime / 1000)
                 
-                -- Look for reel button or hook button
-                local reelButton = fishingGui:FindFirstChild("Reel", true) or
-                                  fishingGui:FindFirstChild("Hook", true) or
-                                  fishingGui:FindFirstChild("ReelButton", true)
+                -- Look for reel/hook button
+                local reelButton = mainGui:FindFirstChild("Reel", true) or
+                                  mainGui:FindFirstChild("Hook", true) or
+                                  mainGui:FindFirstChild("Pull", true)
                 
                 if reelButton and reelButton.Visible then
-                    reelButton.Activated:Fire()
+                    pcall(function()
+                        if reelButton.MouseButton1Click then
+                            reelButton.MouseButton1Click:Fire()
+                        elseif reelButton.Activated then
+                            reelButton.Activated:Fire()
+                        end
+                    end)
                 end
                 
                 -- Reset fishing state
@@ -676,26 +823,43 @@ local reactionTimeSlider = AutoFishingSection:Slider({
 
 -- Game Detection
 local function detectFishItGame()
-    pcall(function()
+    local success, result = pcall(function()
+        -- First check exact Place ID
+        local FISH_IT_PLACE_ID = 121864768012064
+        if game.PlaceId == FISH_IT_PLACE_ID then
+            return true
+        end
+        
         local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
         if not playerGui then return false end
         
-        -- Check for Fish-It specific GUIs
+        -- Check for Fish It! specific GUIs (more specific to the actual game)
         local fishItIndicators = {
-            "FishingGui", "Fishing", "MiniGame", "CastButton", 
-            "FishingMain", "GameGui", "FishIt"
+            "ScreenGui", "MainGui", "FishingGui", "Fishing", "MiniGame", 
+            "CastButton", "FishingMain", "GameGui", "Interface", "UI"
         }
         
         for _, indicator in pairs(fishItIndicators) do
-            if playerGui:FindFirstChild(indicator) then
-                return true
+            local gui = playerGui:FindFirstChild(indicator)
+            if gui then
+                -- Look for fishing-related elements within the GUI
+                local fishingElements = {
+                    "Cast", "Reel", "Hook", "Fish", "Rod", "Bait", "Catch"
+                }
+                
+                for _, element in pairs(fishingElements) do
+                    if gui:FindFirstChild(element, true) then
+                        return true
+                    end
+                end
             end
         end
         
-        -- Check workspace for Fish-It objects
+        -- Check workspace for Fish It! specific objects
         local workspace = game:GetService("Workspace")
         local fishItObjects = {
-            "FishingSpots", "Lake", "Pond", "FishingArea"
+            "FishingSpots", "Lake", "Pond", "FishingArea", "Water", 
+            "FishingZone", "Dock", "Pier", "FishSpawn", "Boats"
         }
         
         for _, obj in pairs(fishItObjects) do
@@ -706,19 +870,43 @@ local function detectFishItGame()
         
         return false
     end)
+    
+    return success and result or false
 end
 
 AutoFishingSection:Button({
-    Title = "Check Fish-It Game",
+    Title = "Check Fish It! Game",
     Icon = "search",
-    Desc = "Detect if Fish-It game is loaded",
+    Desc = "Verify if you're in the correct Fish It! game",
     Callback = function()
-        local isDetected = detectFishItGame()
+        local FISH_IT_PLACE_ID = 121864768012064
+        local currentPlaceId = game.PlaceId
+        local isCorrectGame = currentPlaceId == FISH_IT_PLACE_ID
+        local hasGameObjects = detectFishItGame()
+        
+        local statusTitle = ""
+        local statusContent = ""
+        local statusIcon = ""
+        
+        if isCorrectGame then
+            statusTitle = "✅ Fish It! Detected"
+            statusContent = string.format("Perfect! You're in Fish It!\nPlace ID: %d\nAll features ready!", currentPlaceId)
+            statusIcon = "check-circle"
+        elseif hasGameObjects then
+            statusTitle = "⚠️ Similar Game Detected"
+            statusContent = string.format("Found fishing elements but wrong Place ID\nCurrent: %d\nExpected: %d", currentPlaceId, FISH_IT_PLACE_ID)
+            statusIcon = "alert-triangle"
+        else
+            statusTitle = "❌ Fish It! Not Found"
+            statusContent = string.format("Please join Fish It! game first\nCurrent Place ID: %d\nNeeded Place ID: %d", currentPlaceId, FISH_IT_PLACE_ID)
+            statusIcon = "x-circle"
+        end
+        
         WindUI:Notify({
-            Title = isDetected and "✅ Fish-It Detected" or "❌ Fish-It Not Found",
-            Content = isDetected and "Game detected! Auto fishing ready." or "Please join Fish-It game first.",
-            Icon = isDetected and "check-circle" or "alert-triangle",
-            Duration = 3
+            Title = statusTitle,
+            Content = statusContent,
+            Icon = statusIcon,
+            Duration = 5
         })
     end
 })
@@ -726,14 +914,16 @@ AutoFishingSection:Button({
 AutoFishingSection:Button({
     Title = "Start Auto Fishing",
     Icon = "play",
-    Desc = "Begin automated fishing process",
+    Desc = "Begin automated fishing in Fish It!",
     Callback = function()
-        if not detectFishItGame() then
+        local FISH_IT_PLACE_ID = 121864768012064
+        
+        if game.PlaceId ~= FISH_IT_PLACE_ID then
             WindUI:Notify({
-                Title = "❌ Game Not Detected",
-                Content = "Please join Fish-It game first!",
+                Title = "❌ Wrong Game",
+                Content = string.format("Please join Fish It! first!\nCurrent: %d\nNeeded: %d", game.PlaceId, FISH_IT_PLACE_ID),
                 Icon = "alert-triangle",
-                Duration = 3
+                Duration = 5
             })
             return
         end
@@ -742,8 +932,8 @@ AutoFishingSection:Button({
             AutoFishToggle:Set(true)
         end
         WindUI:Notify({
-            Title = "🎣 Auto Fishing",
-            Content = "Starting automated fishing session!",
+            Title = "🎣 Auto Fishing Started",
+            Content = "Fish It! auto fishing is now active!",
             Icon = "fish",
             Duration = 2
         })
@@ -1240,7 +1430,98 @@ end
 
 Tabs.Profile:Divider()
 
--- Profile action buttons
+-- Current Game Information Section
+Tabs.Profile:Section({
+    Title = "🎮 Current Game Info",
+    TextSize = 16,
+})
+
+local currentGameInfo = getCurrentGameInfo()
+Tabs.Profile:Paragraph({
+    Title = "🎮 Game Details",
+    Desc = string.format([[
+<b>🎯 Game Name:</b> %s
+<b>👨‍💻 Creator:</b> %s
+<b>👥 Players:</b> %d/%d online
+<b>🆔 Place ID:</b> %d
+<b>🎮 Game ID:</b> %d
+<b>🔗 Job ID:</b> %s
+
+<i>📊 Real-time game information updated automatically.</i>
+    ]], 
+        currentGameInfo.name,
+        currentGameInfo.creator,
+        currentGameInfo.players,
+        currentGameInfo.maxPlayers,
+        currentGameInfo.placeId,
+        currentGameInfo.gameId,
+        string.sub(currentGameInfo.jobId, 1, 8) .. "..."
+    ),
+    Image = "gamepad-2",
+    ImageSize = 20,
+    Color = Color3.fromHex("#00BFFF"),
+})
+
+-- Game compatibility check
+local isCompatible = isFishItGame()
+Tabs.Profile:Paragraph({
+    Title = isCompatible and "✅ Fish-It Compatible" or "🎮 General Game",
+    Desc = isCompatible and 
+        "🎣 This game is compatible with Fish-It features!\n\n✅ Auto fishing should work\n✅ Perfect fishing available\n✅ All features enabled" or
+        "🎮 This game may not support Fish-It features.\n\n💡 Fish-It features work best in fishing games\n⚠️ Some features may not function\n🔍 Try the 'Check Fish-It Game' button",
+    Image = isCompatible and "check-circle" or "info",
+    ImageSize = 20,
+    Color = isCompatible and Color3.fromHex("#00FF7F") or Color3.fromHex("#FFB347"),
+})
+
+-- Quick game actions
+Tabs.Profile:Button({
+    Title = "Copy Game Link",
+    Icon = "external-link",
+    Desc = "Copy Roblox game URL to clipboard",
+    Callback = function()
+        local gameUrl = "https://www.roblox.com/games/" .. game.PlaceId
+        if setclipboard then
+            setclipboard(gameUrl)
+            WindUI:Notify({
+                Title = "🔗 Game Link Copied",
+                Content = "Game URL copied to clipboard!",
+                Duration = 3
+            })
+        else
+            WindUI:Notify({
+                Title = "🔗 Game URL",
+                Content = gameUrl,
+                Duration = 5
+            })
+        end
+    end
+})
+
+Tabs.Profile:Button({
+    Title = "Refresh Game Info",
+    Icon = "refresh-cw", 
+    Desc = "Update current game information",
+    Callback = function()
+        local refreshedInfo = getCurrentGameInfo()
+        local compatibility = isFishItGame()
+        
+        WindUI:Notify({
+            Title = "🎮 Game Info Refreshed",
+            Content = string.format("Game: %s\nPlayers: %d/%d\nCompatible: %s", 
+                refreshedInfo.name,
+                refreshedInfo.players,
+                refreshedInfo.maxPlayers,
+                compatibility and "Yes" or "Unknown"
+            ),
+            Duration = 4
+        })
+    end
+})
+
+Tabs.Profile:Divider()
+
+-- Profile action buttons  
 Tabs.Profile:Section({
     Title = "loc:PROFILE_TOOLS",
     TextSize = 16,
