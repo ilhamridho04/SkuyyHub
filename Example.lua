@@ -1,3 +1,3 @@
--- Moved to main_example.lua
+-- Main example moved to main.lua
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/refs/heads/main/main_example.lua"))()
+loadstring(game:HttpGet("https://ai.ngodingskuyy.dev/dist/main.lua"))()

@@ -4,6 +4,7 @@ local WindUI = {
     Creator = require("./modules/Creator"),
     LocalizationModule = require("./modules/Localization"),
     NotificationModule = require("./components/Notification"),
+    Games = require("./games/Init"),
     Themes = nil,
     Transparent = false,
     
@@ -148,6 +149,25 @@ function WindUI:SetTheme(Value)
         return WindUI.Themes[Value]
     end
     return nil
+end
+
+function WindUI:LoadGameScript()
+    local gameInfo = WindUI.Games.GetGameInfo()
+    
+    if gameInfo.Supported then
+        local success, result = WindUI.Games.LoadGame(WindUI)
+        if success then
+            return true, "Game script loaded: " .. gameInfo.Name
+        else
+            return false, result or "Failed to load game script"
+        end
+    else
+        return false, "Unsupported game: " .. (gameInfo.Name or "Unknown") .. " (ID: " .. gameInfo.Id .. ")"
+    end
+end
+
+function WindUI:GetGameInfo()
+    return WindUI.Games.GetGameInfo()
 end
 
 function WindUI:GetThemes()

@@ -28,7 +28,7 @@
 - [Documentation](https://Footagesus.github.io/WindUI-Docs/)
 - [Installation](https://footagesus.github.io/WindUI-Docs/docs/installation)
 
-- [Example](/main_example.lua) (wip)
+- [Example](/main.lua) (with FishIt support)
   ```luau
-  loadstring(game:HttpGet('https://raw.githubusercontent.com/Footagesus/WindUI/refs/heads/main/main_example.lua'))()
+  loadstring(game:HttpGet('https://raw.githubusercontent.com/ilhamridho04/SkuyyHub/main/main.lua'))()
   ```

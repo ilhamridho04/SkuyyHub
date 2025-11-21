@@ -17,13 +17,13 @@ WindUI is a **Roblox UI Library** built in Luau for game script interfaces. The 
 ### Build System
 ```bash
 # Development build with custom entry point
-npm run dev INPUT_FILE=main_example.lua
+npm run dev INPUT_FILE=main.lua
 
 # Production build (minified with darklua)
 npm run build
 
 # Live development with file watching + HTTP server
-npm run example-live-build  # Uses main_example.lua + port 8642
+npm run example-live-build  # Uses main.lua + port 8642
 ```
 
 **Build Pipeline:**
@@ -35,7 +35,7 @@ npm run example-live-build  # Uses main_example.lua + port 8642
 ### Development Environment
 - **Aftman** for tool management: `rojo@7.3.0`, `darklua@0.17.1`, `lune@0.7.6`
 - **Node.js** for build orchestration with `chokidar-cli` for file watching
-- Entry points: `main.lua` (loadstring target), `main_example.lua` (development testing)
+- Entry points: `main.lua` (primary entry point for both loadstring and development)
 
 ## Code Patterns
 
@@ -107,7 +107,7 @@ Elements.Load(tbl, Container, Elements, Window, WindUI, OnElementCreateFunction,
 
 ## Common Debugging
 
-- Use `main_example.lua` for component testing
+- Use `main.lua` for component testing
 - Check `dist/main.lua` for build issues  
 - Theme problems: verify color usage in `src/themes/Init.lua`
 - Component not loading: check `src/elements/Init.lua` registration
